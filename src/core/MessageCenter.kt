@@ -14,7 +14,7 @@ import kotlin.js.Date
  * must have unique request_id field and "sender" field with link to object, which should receive response to
  * this request. After receiving request, object sends it to server and moves it to other queue -
  * requestsWaitingResponses and wait until server responds. When receive response, which has request_id,
- * MessageCenter extracts request with this response_id from requestsWaitingResponses queue and executes
+ * MessageCenter extracts request with this request_id from requestsWaitingResponses queue and executes
  * handleWebSocketResponse(request_id,response) of sender object, connected to this waiting request. So,
  * this object must implement MessageCenterResponseListener protocol.
  */
@@ -308,7 +308,6 @@ object MessageCenter {
                 this.removeFromPendingRequests(request_id)
             }
         }
-
     }
 
     /**
@@ -535,7 +534,7 @@ object MessageCenter {
      * WebSocket server message handler. Called when received response from WebSocket server
      *
      * @param event: Event which includes information about response, including received response
-     * body in event.data property. Depending on type of received message body (Text or Binary) it called
+     * body in event.target.result property. Depending on type of received message body (Text or Binary) it calls
      * one of specific methods, implemented below
      */
     fun onMessage(event:MessageEvent) {
@@ -556,7 +555,7 @@ object MessageCenter {
                     var target:dynamic = it.target
                     var binary = target.result as? ArrayBuffer
                     if (binary != null) {
-                        this@MessageCenter.onDataMessage(binary)
+                        this@MessageCenter.onBinaryMessage(binary)
                     } else {
                         Logger.log(LogLevel.WARNING, "Could not parse received binary data from WebSocket server",
                                 "MessageCenter", "onMessage")
@@ -589,8 +588,6 @@ object MessageCenter {
                     "$text","MessageCenter","onTextMessage")
             return
         }
-        var i = 0;
-
         val request_id = response["request_id"] as? String
         if (request_id == null || request_id.length == 0) {
             Logger.log(LogLevel.WARNING,"No request_id in received text response. Response body: " +
@@ -625,7 +622,7 @@ object MessageCenter {
      *
      * @param data: received binary data, transformed to ArrayBuffer
      */
-    fun onDataMessage(data:ArrayBuffer) {
+    fun onBinaryMessage(data:ArrayBuffer) {
         val checksum = crc32FromArrayBuffer(data)
         Logger.log(LogLevel.DEBUG,"Received binary data with checskum: $checksum from WebSocket server",
                 "MessageCenter",
