@@ -1,6 +1,6 @@
 package index
 
-import app.*
+import components.app.*
 import kotlinext.js.*
 import react.dom.*
 import kotlin.browser.*
