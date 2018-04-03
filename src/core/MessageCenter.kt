@@ -403,7 +403,7 @@ object MessageCenter {
      */
     fun addToReceivedFiles(data: ArrayBuffer): HashMap<String,Any> {
         val checksum = crc32FromArrayBuffer(data)
-        val timestamp = (Date.now()).toInt()
+        val timestamp = (Date.now()/1000).toInt()
         val record:HashMap<String,Any> = hashMapOf("data" to data,"timestamp" to timestamp)
         Logger.log(LogLevel.DEBUG,"Added file with checksum ${checksum} to receivedFiles queue",
         "MessageCenter","addToReceivedFiles")

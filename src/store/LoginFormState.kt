@@ -1,5 +1,6 @@
 package store
 
+import core.MessageCenter
 import core.MessageCenterResponseListener
 import lib.Action
 import lib.State
@@ -13,7 +14,7 @@ import utils.stringifyJSON
  */
 class LoginFormState : State {
     // Value of "Login" field
-    var login = "text"
+    var login = ""
     // Value of "password" field
     var password = ""
     // Array of validation errors
@@ -50,10 +51,41 @@ class LoginFormState : State {
          * and send request to MessageCenter WebSocket server
          */
         fun exec() {
+            Logger.log(LogLevel.DEBUG,"Begin login user action")
             val state = (appStore.state as AppState).loginForm
             Logger.log(LogLevel.DEBUG,"Begin login user action using login form state $state",
                     "LoginFormState",
                     "doLogin.exec")
+            var errors = HashMap<String,LoginFormError>()
+            appStore.dispatch(LoginFormState.changeErrorsField(errors))
+            if (state.login.isEmpty()) {
+                errors["login"] = LoginFormError.RESULT_ERROR_INCORRECT_LOGIN
+            }
+            if (state.password.isEmpty()) {
+                errors["password"] = LoginFormError.RESULT_ERROR_INCORRECT_PASSWORD
+            }
+            if (errors.count()>0) {
+                Logger.log(LogLevel.DEBUG,"Validation errors: $errors",
+                        "LoginState.doLogin","exec")
+                appStore.dispatch(LoginFormState.changeErrorsField(errors))
+                return
+            }
+            if (!MessageCenter.isConnected) {
+                Logger.log(LogLevel.DEBUG, "WebSocket server Connection error during login",
+                        "LoginState.doLogin","exec")
+                appStore.dispatch(
+                        LoginFormState.changeErrorsField(
+                            hashMapOf("general" to LoginFormError.RESULT_ERROR_CONNECTION_ERROR)
+                        )
+                )
+                return
+            }
+            val request = hashMapOf("action" to "login_user","login" to state.login, "password" to state.password,
+                    "sender" to this)
+            Logger.log(LogLevel.DEBUG,"Created login request: ${stringifyJSON(request)}",
+                    "LoginState.doLogin","exec")
+            MessageCenter.addToPendingRequests(request)
+            appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(true))
         }
 
         /**
@@ -63,12 +95,17 @@ class LoginFormState : State {
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>) {
             Logger.log(LogLevel.DEBUG,"Received response to request with id: $request_id. " +
                     "Response body: ${stringifyJSON(response)}","LoginFormState","handleWebSocketResponse")
+
         }
     }
 
+    /**
+     * Function returns custom string representation of LoginFormState object
+     *
+     * @return String, representing all fields of LoginFormState
+     */
     override fun toString():String {
-        var errorsStr = stringifyJSON(this.errors as HashMap<String,Any>)
-        return "{login:$login,password:$password,showProcessWindowAction:$showProgressIndicator,errors:$errorsStr}"
+        return "{login:$login,password:$password,showProcessWindowAction:$showProgressIndicator,errors:$errors}"
     }
 }
 

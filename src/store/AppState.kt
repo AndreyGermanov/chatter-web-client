@@ -19,4 +19,8 @@ interface SmartEnum {
 class AppState: State {
     // holds state of Login form
     var loginForm = LoginFormState()
+
+    override fun toString(): String {
+        return loginForm.toString()
+    }
 }

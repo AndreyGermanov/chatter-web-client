@@ -6,7 +6,6 @@ import kotlinx.html.id
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onSubmitFunction
-import kotlinx.html.onChange
 import react.dom.*
 import lib.State
 import lib.StoreSubscriber
@@ -19,17 +18,23 @@ import store.LoginFormState
 import store.appStore
 import utils.LogLevel
 import utils.Logger
-import utils.stringifyJSON
 import kotlin.browser.document
+import kotlin.browser.window
 
 class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
 
+    /**
+     * Function runs right after component appears on the screen
+     */
     override fun componentDidMount() {
         appStore.subscribe(this)
         var state = appStore.state as AppState
         this.setState(state.loginForm)
     }
 
+    /**
+     * Function used to draw HTML of component on the screen
+     */
     override fun RBuilder.render() {
         div(classes="panel panel-primary col-sm-6 screen_center") {
             div {
@@ -63,6 +68,16 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
                                    }
                                }
                            }
+                           if (state.errors != null && state.errors["login"] != null) {
+                               div(classes="error") {
+                                   span(classes="error") {
+                                       attrs {
+                                           id = "loginError"
+                                       }
+                                       +state.errors["login"]!!.getMessage()
+                                   }
+                               }
+                           }
                        }
                    }
                    div(classes="form-group") {
@@ -77,6 +92,16 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
                                    this.onChangeFunction = {
                                        var element = document.getElementById("passwordField") as HTMLInputElement
                                        appStore.dispatch(LoginFormState.changePasswordField(element?.value))
+                                   }
+                               }
+                           }
+                           if (state.errors!=null && state.errors["password"] != null) {
+                               div(classes="error") {
+                                   span(classes="error") {
+                                       attrs {
+                                           id = "passwordError"
+                                       }
+                                       +state.errors["password"]!!.getMessage()
                                    }
                                }
                            }
@@ -96,16 +121,23 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
             }
         }
     }
-
+    
+    /**
+     * Function runs every time when component receives notification about changing application state from reducer
+     * Here component can redraw itself, if something changed
+     *
+     * @param state: Changed state
+     */
     override fun newState(state: State) {
         val state = state as AppState
         Logger.log(LogLevel.DEBUG_REDUX,"Applying new state to LoginForm. State: $state",
                 "LoginForm","newState")
-        this.setState({
-            it.login = state.loginForm.login
-            it.password = state.loginForm.password
-            it
-        })
+        if (state.loginForm.errors["general"] != null) {
+            window.alert(state.loginForm.errors["general"]!!.getMessage())
+            state.loginForm.errors.remove("general")
+            appStore.dispatch(LoginFormState.changeErrorsField(state.loginForm.errors))
+        }
+        this.setState(state.loginForm)
     }
 
 }

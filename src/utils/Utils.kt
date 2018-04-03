@@ -100,7 +100,11 @@ fun stringifyJSON(obj:HashMap<String,Any>):String {
         if (jsTypeOf(value) != "object") {
             result.set(result.count(),index to value)
         } else {
-            result.set(result.count(),index to stringifyJSON(value as HashMap<String,Any>))
+            if (value is HashMap<*,*>) {
+                result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
+            } else {
+                result.set(result.count(),index to "<object>")
+            }
         }
     }
     return JSON.stringify(json(*result))
