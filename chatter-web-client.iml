@@ -16,5 +16,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="kotlin-react-router-dom" level="project" />
     <orderEntry type="library" name="kotlin-test" level="project" />
+    <orderEntry type="library" name="kotlin-mocha" level="project" />
   </component>
 </module>

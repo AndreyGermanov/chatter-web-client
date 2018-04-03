@@ -3,6 +3,9 @@ package store
 import core.MessageCenterResponseListener
 import lib.Action
 import lib.State
+import utils.LogLevel
+import utils.Logger
+import utils.stringifyJSON
 
 /**
  * Class holds state of Login Form
@@ -10,7 +13,7 @@ import lib.State
  */
 class LoginFormState : State {
     // Value of "Login" field
-    var login = ""
+    var login = "text"
     // Value of "password" field
     var password = ""
     // Array of validation errors
@@ -47,7 +50,10 @@ class LoginFormState : State {
          * and send request to MessageCenter WebSocket server
          */
         fun exec() {
-
+            val state = (appStore.state as AppState).loginForm
+            Logger.log(LogLevel.DEBUG,"Begin login user action using login form state $state",
+                    "LoginFormState",
+                    "doLogin.exec")
         }
 
         /**
@@ -55,8 +61,14 @@ class LoginFormState : State {
          * this action
          */
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>) {
-            TODO("not implemented")
+            Logger.log(LogLevel.DEBUG,"Received response to request with id: $request_id. " +
+                    "Response body: ${stringifyJSON(response)}","LoginFormState","handleWebSocketResponse")
         }
+    }
+
+    override fun toString():String {
+        var errorsStr = stringifyJSON(this.errors as HashMap<String,Any>)
+        return "{login:$login,password:$password,showProcessWindowAction:$showProgressIndicator,errors:$errorsStr}"
     }
 }
 
