@@ -1,7 +1,6 @@
 package reducers
 
 import lib.Action
-import lib.State
 import store.LoginFormState
 import utils.LogLevel
 import utils.Logger

@@ -4,6 +4,7 @@ import lib.Action
 import lib.State
 import store.AppState
 import store.LoginFormAction
+import store.UserStateAction
 import utils.LogLevel
 import utils.Logger
 
@@ -21,7 +22,9 @@ fun RootReducer(state: State, action: Action):AppState {
     Logger.log(LogLevel.DEBUG_REDUX,"Starting root reducer. Initial state: $state",
             "RootReducer","RootReducer")
     when(action) {
+        is AppState.changeCurrentScreenAction -> newState.currentScreen = action.currentScreen
         is LoginFormAction -> newState.loginForm = LoginFormReducer(newState.loginForm,action)
+        is UserStateAction -> newState.user = UserStateReducer(newState.user,action)
     }
     Logger.log(LogLevel.DEBUG_REDUX,"Returning new state after reducing. New state $newState",
             "RootReducer","RootReducer")

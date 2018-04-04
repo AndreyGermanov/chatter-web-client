@@ -137,8 +137,9 @@ object MessageCenter {
      */
     fun connect() {
         if (!this.testingMode) {
+            Logger.log(LogLevel.DEBUG,"Connecting to WebSocket server: "+"ws://" + this.host + ":" +
+                    this.port + "/" + this.endpoint,"MessageCenter","connect")
             this.ws = WebSocket("ws://" + this.host + ":" + this.port + "/" + this.endpoint)
-
             this.ws.onopen = { event ->
                 this.onConnect(event)
             }
@@ -173,6 +174,7 @@ object MessageCenter {
      * Starter function. Starts main loop
      */
     fun run() {
+        Logger.log(LogLevel.DEBUG,"Message center started","MessageCenter","run")
         window.setInterval({this.loop()},1000)
     }
 
