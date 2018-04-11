@@ -124,15 +124,17 @@ class LoginFormState : State {
             appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(false))
             MessageCenter.removeFromRequestsWaitingResponses(request_id)
             if (response["status"]=="error") {
-                var error:LoginFormError? = null
-                try {
-                    error = LoginFormError.valueOf(response["status_code"].toString())
-                } catch (e:Exception) {
-                    Logger.log(LogLevel.WARNING,"Response for request_id=$request_id has unknown " +
-                            "'status_code'=${response["status_code"]}","LoginFormState.doLogin","exec")
-                    error = LoginFormError.RESULT_ERROR_UNKNOWN
+                if (response["status_code"].toString()!="RESULT_ERROR_SESSION_TIMEOUT") {
+                    var error: LoginFormError? = null
+                    try {
+                        error = LoginFormError.valueOf(response["status_code"].toString())
+                    } catch (e: Exception) {
+                        Logger.log(LogLevel.WARNING, "Response for request_id=$request_id has unknown " +
+                                "'status_code'=${response["status_code"]}", "LoginFormState.doLogin", "exec")
+                        error = LoginFormError.RESULT_ERROR_UNKNOWN
+                    }
+                    appStore.dispatch(LoginFormState.changeErrorsField(hashMapOf("general" to error!!)))
                 }
-                appStore.dispatch(LoginFormState.changeErrorsField(hashMapOf("general" to error!!)))
                 appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
                 localStorage.removeItem("user_id");localStorage.removeItem("session_id")
                 return
