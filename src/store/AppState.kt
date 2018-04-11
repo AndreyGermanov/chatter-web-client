@@ -19,7 +19,7 @@ interface SmartEnum {
  */
 class AppState: State {
     // holds current screen on which user stands
-    var currentScreen = AppScreen.LOGIN_FORM
+    var currentScreen: AppScreen? = null
     // holds state of Login form
     var loginForm = LoginFormState()
     // holds state of User

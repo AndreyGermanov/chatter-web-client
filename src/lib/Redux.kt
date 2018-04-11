@@ -1,5 +1,6 @@
 package lib
 
+import react.RProps
 import react.RState
 import kotlin.reflect.KFunction2
 
@@ -65,7 +66,7 @@ class Store(state:State, reducer: KFunction2<@ParameterName(name = "state") Stat
 }
 
 // Abstract interface, which should implement application state object. Can be struct, class or anything else
-open interface State: RState {}
+open interface State: RState, RProps {}
 
 // Abstract interface, which should implement action. Can be struct, class or anything else
 interface Action

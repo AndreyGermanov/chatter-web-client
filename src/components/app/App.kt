@@ -2,11 +2,10 @@ package components.app
 
 import components.app.login.loginForm
 import core.MessageCenter
-import core.MessageCenterResponseListener
 import lib.State
 import lib.StoreSubscriber
 import react.*
-import react.dom.*
+import store.AppScreen
 import store.AppState
 import store.LoginFormState
 import store.appStore
@@ -15,21 +14,38 @@ import store.appStore
 class App : RComponent<RProps, AppState>(), StoreSubscriber {
 
     /**
-     * Function runs after Application component appears on the screen.
-     * Here, we start Message center
+     * Function runs right after component appeared on the screen. Used to init
+     * anything in application, which should be done after it
      */
     override fun componentDidMount() {
-        MessageCenter.setup("192.168.0.184",8080,"websocket")
+        MessageCenter.setup("192.168.0.214",8080,"websocket")
         MessageCenter.run()
         appStore.subscribe(this)
+        val state = appStore.state as AppState
+        this.setState(state)
+        if (!MessageCenter.user_id.isEmpty() && !MessageCenter.session_id.isEmpty()) {
+            LoginFormState.doLogin().exec(MessageCenter.user_id,MessageCenter.session_id)
+        } else {
+            appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
+        }
     }
 
     /**
      * Function runs when need to generate HTML of root component
      */
     override fun RBuilder.render() {
-        if (MessageCenter.user_id.count()==0 || MessageCenter.session_id.count()==0) {
-            loginForm()
+        if (state.loginForm==null) {
+            return
+        }
+        if (state.currentScreen == null) {
+            return
+        }
+        if (!state.user.isLogin || MessageCenter.user_id.isEmpty()) {
+            loginForm(
+                    login = state.loginForm.login,
+                    password = state.loginForm.password,
+                    errors = state.loginForm.errors
+            )
         } else {
             +"Admin panel"
         }

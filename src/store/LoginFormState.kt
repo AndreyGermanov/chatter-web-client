@@ -7,6 +7,7 @@ import lib.State
 import utils.LogLevel
 import utils.Logger
 import utils.stringifyJSON
+import kotlin.browser.localStorage
 
 /**
  * Class holds state of Login Form
@@ -50,8 +51,16 @@ class LoginFormState : State {
          * Function used to run this action, do login and password validation
          * and send request to MessageCenter WebSocket server
          */
-        fun exec() {
+        fun exec(user_id:String="",session_id:String="") {
             Logger.log(LogLevel.DEBUG,"Begin login user action")
+            if (!user_id.toString().isEmpty() && !session_id.toString().isEmpty()) {
+                Logger.log(LogLevel.DEBUG,"Begin login user action using user_id and session_id",
+                        "LoginFormState.doLogin","exec")
+                val request = hashMapOf("action" to "login_user","login" to user_id,"password" to session_id,
+                        "sender" to this)
+                MessageCenter.addToPendingRequests(request)
+                return
+            }
             val state = (appStore.state as AppState).loginForm
             Logger.log(LogLevel.DEBUG,"Begin login user action using login form state $state",
                     "LoginFormState",
@@ -66,13 +75,13 @@ class LoginFormState : State {
             }
             if (errors.count()>0) {
                 Logger.log(LogLevel.DEBUG,"Validation errors: $errors",
-                        "LoginState.doLogin","exec")
+                        "LoginFormState.doLogin","exec")
                 appStore.dispatch(LoginFormState.changeErrorsField(errors))
                 return
             }
             if (!MessageCenter.isConnected) {
                 Logger.log(LogLevel.DEBUG, "WebSocket server Connection error during login",
-                        "LoginState.doLogin","exec")
+                        "LoginFormState.doLogin","exec")
                 appStore.dispatch(
                         LoginFormState.changeErrorsField(
                             hashMapOf("general" to LoginFormError.RESULT_ERROR_CONNECTION_ERROR)
@@ -83,7 +92,7 @@ class LoginFormState : State {
             val request = hashMapOf("action" to "login_user","login" to state.login, "password" to state.password,
                     "sender" to this)
             Logger.log(LogLevel.DEBUG,"Created login request: ${stringifyJSON(request)}",
-                    "LoginState.doLogin","exec")
+                    "LoginFormState.doLogin","exec")
             MessageCenter.addToPendingRequests(request)
             appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(true))
         }
@@ -124,12 +133,16 @@ class LoginFormState : State {
                     error = LoginFormError.RESULT_ERROR_UNKNOWN
                 }
                 appStore.dispatch(LoginFormState.changeErrorsField(hashMapOf("general" to error!!)))
+                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
+                localStorage.removeItem("user_id");localStorage.removeItem("session_id")
                 return
             }
             if (!response.containsKey("user_id") || !response.containsKey("session_id")) {
                 appStore.dispatch(LoginFormState.changeErrorsField(
                         hashMapOf("general" to LoginFormError.AUTHENTICATION_ERROR)
                 ))
+                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
+                localStorage.removeItem("user_id");localStorage.removeItem("session_id")
                 return
             }
             var role: UserRole? = null
@@ -145,6 +158,8 @@ class LoginFormState : State {
                 appStore.dispatch(LoginFormState.changeErrorsField(
                         hashMapOf("general" to LoginFormError.AUTHENTICATION_ERROR)
                 ))
+                localStorage.removeItem("user_id");localStorage.removeItem("session_id")
+                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
                 return
             }
             if (role != UserRole.ADMIN) {
@@ -153,10 +168,14 @@ class LoginFormState : State {
                 appStore.dispatch(LoginFormState.changeErrorsField(
                         hashMapOf("general" to LoginFormError.AUTHENTICATION_ERROR)
                 ))
+                localStorage.removeItem("user_id");localStorage.removeItem("session_id")
+                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
                 return
             }
             MessageCenter.user_id = response["user_id"].toString()
             MessageCenter.session_id = response["session_id"].toString()
+            localStorage.setItem("user_id",MessageCenter.user_id)
+            localStorage.setItem("session_id",MessageCenter.session_id)
             appStore.dispatch(LoginFormState.changeErrorsField(HashMap()))
             appStore.dispatch(UserState.Change_user_id_Action(MessageCenter.user_id))
             appStore.dispatch(UserState.Change_session_id_Action(MessageCenter.session_id))

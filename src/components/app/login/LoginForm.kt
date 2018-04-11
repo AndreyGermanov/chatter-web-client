@@ -1,19 +1,16 @@
 package components.app.login
 
-import core.MessageCenterResponseListener
 import kotlinx.html.InputType
 import kotlinx.html.id
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onSubmitFunction
 import react.dom.*
-import lib.State
-import lib.StoreSubscriber
 import org.w3c.dom.HTMLInputElement
 import react.RBuilder
 import react.RComponent
-import react.RProps
 import store.AppState
+import store.LoginFormError
 import store.LoginFormState
 import store.appStore
 import utils.LogLevel
@@ -21,16 +18,7 @@ import utils.Logger
 import kotlin.browser.document
 import kotlin.browser.window
 
-class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
-
-    /**
-     * Function runs right after component appears on the screen
-     */
-    override fun componentDidMount() {
-        appStore.subscribe(this)
-        var state = appStore.state as AppState
-        this.setState(state.loginForm)
-    }
+class LoginForm : RComponent<LoginFormState, LoginFormState>() {
 
     /**
      * Function used to draw HTML of component on the screen
@@ -68,13 +56,13 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
                                    }
                                }
                            }
-                           if (state.errors != null && state.errors["login"] != null) {
+                           if (props.errors["login"] != null) {
                                div(classes="error") {
                                    span(classes="error") {
                                        attrs {
                                            id = "loginError"
                                        }
-                                       +state.errors["login"]!!.getMessage()
+                                       +props.errors["login"]!!.getMessage()
                                    }
                                }
                            }
@@ -88,20 +76,20 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
                            input(classes="form-control",type= InputType.password) {
                                attrs {
                                    id = "passwordField"
-                                   value = state.password
+                                   value = props.password
                                    this.onChangeFunction = {
                                        var element = document.getElementById("passwordField") as HTMLInputElement
                                        appStore.dispatch(LoginFormState.changePasswordField(element?.value))
                                    }
                                }
                            }
-                           if (state.errors!=null && state.errors["password"] != null) {
+                           if (props.errors["password"] != null) {
                                div(classes="error") {
                                    span(classes="error") {
                                        attrs {
                                            id = "passwordError"
                                        }
-                                       +state.errors["password"]!!.getMessage()
+                                       +props.errors["password"]!!.getMessage()
                                    }
                                }
                            }
@@ -121,25 +109,30 @@ class LoginForm : RComponent<RProps, LoginFormState>(), StoreSubscriber {
             }
         }
     }
-    
+
     /**
      * Function runs every time when component receives notification about changing application state from reducer
-     * Here component can redraw itself, if something changed
+     * or properties from uplevel object. Here component can control what to do right after UI updated
      *
-     * @param state: Changed state
+     * @param prevProps: Previous property values, to compare current properties with
+     * @param prevState: Previous state, to compare with current state values
      */
-    override fun newState(state: State) {
-        val state = state as AppState
-        Logger.log(LogLevel.DEBUG_REDUX,"Applying new state to LoginForm. State: $state",
-                "LoginForm","newState")
-        if (state.loginForm.errors["general"] != null) {
-            window.alert(state.loginForm.errors["general"]!!.getMessage())
-            state.loginForm.errors.remove("general")
-            appStore.dispatch(LoginFormState.changeErrorsField(state.loginForm.errors))
+    override fun componentDidUpdate(prevProps: LoginFormState, prevState: LoginFormState) {
+        Logger.log(LogLevel.DEBUG_REDUX, "Applying new state to LoginForm. State: $props",
+                "LoginForm", "newState")
+        if (props.errors["general"] != null) {
+            window.alert(props.errors["general"]!!.getMessage())
+            val errors = props.errors
+            errors.remove("general")
+            appStore.dispatch(LoginFormState.changeErrorsField(errors))
         }
-        this.setState(state.loginForm)
     }
 
 }
 
-fun RBuilder.loginForm() = child(LoginForm::class) {}
+fun RBuilder.loginForm(login:String="", password:String="",
+                       errors:HashMap<String, LoginFormError> = HashMap()) = child(LoginForm::class) {
+    attrs.login = login
+    attrs.password = password
+    attrs.errors = errors
+}

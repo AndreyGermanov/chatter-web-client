@@ -6,6 +6,7 @@ import org.w3c.files.Blob
 import org.w3c.files.FileReader
 import utils.*
 import kotlin.*
+import kotlin.browser.localStorage
 import kotlin.browser.window
 import kotlin.js.Date
 
@@ -130,6 +131,12 @@ object MessageCenter {
         this.host = host
         this.port = port
         this.endpoint = endpoint
+        if (localStorage["user_id"]!=null) {
+            this.user_id = localStorage["user_id"].toString()
+        }
+        if (localStorage["session_id"]!=null) {
+            this.session_id = localStorage["session_id"].toString()
+        }
     }
 
     /**
