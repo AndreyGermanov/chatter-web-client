@@ -22,6 +22,8 @@ class AppState: State {
     var currentScreen: AppScreen? = null
     // holds state of Login form
     var loginForm = LoginFormState()
+    // holds state of Navigation bar
+    var navbar = NavbarState()
     // holds state of User
     var user = UserState()
 
@@ -29,13 +31,22 @@ class AppState: State {
      * Function returns string representation of Application state
      */
     override fun toString(): String {
-        return "Current screen: $currentScreen,Login form: $loginForm"
+        return "Current screen: $currentScreen,Login form: $loginForm,NavBar: ${navbar}."
     }
 
     /**
      * Action used to change current screen of application
      */
     data class changeCurrentScreenAction(val currentScreen:AppScreen): AppAction
+
+    /**
+     * Action which hides all dropdowns
+     */
+     class hideDropdowns() {
+        fun exec() {
+            appStore.dispatch(NavbarState.changeUserMenuDropdownClass("dropdown"))
+        }
+    }
 }
 
 /**

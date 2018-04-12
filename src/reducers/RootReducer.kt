@@ -4,6 +4,7 @@ import lib.Action
 import lib.State
 import store.AppState
 import store.LoginFormAction
+import store.NavbarAction
 import store.UserStateAction
 import utils.LogLevel
 import utils.Logger
@@ -23,6 +24,7 @@ fun RootReducer(state: State, action: Action):AppState {
             "RootReducer","RootReducer")
     when(action) {
         is AppState.changeCurrentScreenAction -> newState.currentScreen = action.currentScreen
+        is NavbarAction -> newState.navbar = NavbarReducer(newState.navbar,action)
         is LoginFormAction -> newState.loginForm = LoginFormReducer(newState.loginForm,action)
         is UserStateAction -> newState.user = UserStateReducer(newState.user,action)
     }
