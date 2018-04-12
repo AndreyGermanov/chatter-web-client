@@ -1,6 +1,7 @@
 package components.app
 
 import components.app.login.loginForm
+import components.app.users.usersList
 import core.MessageCenter
 import kotlinx.html.js.onClickFunction
 import lib.State
@@ -8,6 +9,7 @@ import lib.StoreSubscriber
 import react.*
 import react.dom.div
 import react.dom.span
+import react.dom.style
 import react.router.dom.*
 import store.AppScreen
 import store.AppState
@@ -44,47 +46,54 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
         if (state.currentScreen == null) {
             return
         }
-            div {
-            if (state.currentScreen != AppScreen.LOGIN_FORM) {
-                navbar(state.currentScreen!!,state.user.login,state.navbar.userMenuDropdownClass)
+        if (state.currentScreen != AppScreen.LOGIN_FORM) {
+            navbar(state.currentScreen!!,state.user.login,state.navbar.userMenuDropdownClass)
+        }
+        div(classes="row") {
+            attrs {
+                onClickFunction = {
+                    AppState.hideDropdowns().exec()
+                }
             }
-            hashRouter {
-                switch {
-                    if ((!state.user.isLogin || MessageCenter.user_id.isEmpty()) && state.currentScreen != AppScreen.LOGIN_FORM) {
-                        redirect("", "/login")
-                        appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
-                    }
-                    if (state.user.isLogin && state.currentScreen == AppScreen.LOGIN_FORM) {
-                        redirect("", "/users")
-                        appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USERS_LIST))
-                    }
-                    route("/login", strict = true) {
-                        if (state.currentScreen != AppScreen.LOGIN_FORM) {
+            div(classes="col-md-12") {
+                hashRouter {
+                    switch {
+                        if ((!state.user.isLogin || MessageCenter.user_id.isEmpty()) && state.currentScreen != AppScreen.LOGIN_FORM) {
+                            redirect("", "/login")
                             appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
                         }
-                        loginForm(
-                                login = state.loginForm.login,
-                                password = state.loginForm.password,
-                                errors = state.loginForm.errors
-                        )
-                    }
-                    route("/users",strict= true) {
-                        if (state.currentScreen != AppScreen.USERS_LIST) {
+                        if (state.user.isLogin && state.currentScreen == AppScreen.LOGIN_FORM) {
+                            redirect("", "/users")
                             appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USERS_LIST))
                         }
-                        span {}
-                    }
-                    route("/sessions",strict= true) {
-                        if (state.currentScreen != AppScreen.SESSIONS_LIST) {
-                            appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.SESSIONS_LIST))
+                        route("/login", strict = true) {
+                            if (state.currentScreen != AppScreen.LOGIN_FORM) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
+                            }
+                            loginForm(
+                                    login = state.loginForm.login,
+                                    password = state.loginForm.password,
+                                    errors = state.loginForm.errors
+                            )
                         }
-                        span {}
-                    }
-                    route("/rooms",strict= true) {
-                        if (state.currentScreen != AppScreen.ROOMS_LIST) {
-                            appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.ROOMS_LIST))
+                        route("/users",strict= true) {
+                            if (state.currentScreen != AppScreen.USERS_LIST) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USERS_LIST))
+                            }
+                            usersList(state.usersList)
                         }
-                        span {}
+                        route("/sessions",strict= true) {
+                            if (state.currentScreen != AppScreen.SESSIONS_LIST) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.SESSIONS_LIST))
+                            }
+                            span {}
+                        }
+                        route("/rooms",strict= true) {
+                            if (state.currentScreen != AppScreen.ROOMS_LIST) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.ROOMS_LIST))
+                            }
+                            span {}
+                        }
                     }
                 }
             }

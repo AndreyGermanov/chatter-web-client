@@ -12,3 +12,24 @@ body {
 .error {
     color: red;
 }
+.full_screen {
+    width:100%;
+    height:100%
+}
+#root {
+    padding-top:70px;
+    padding-left:20px;
+    padding-right:20px
+}
+.table-header {
+    background-color: #428bca;
+    color: white;
+    cursor: pointer;
+}
+.inline {
+    display: inline;
+    width: inherit;
+}
+.yellow {
+    color: yellow;
+}

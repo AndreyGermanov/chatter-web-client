@@ -2,16 +2,10 @@ package components.app
 
 import kotlinx.html.*
 import kotlinx.html.js.onClickFunction
-import org.w3c.dom.Attr
-import org.w3c.dom.HTMLElement
-import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.get
 import react.RBuilder
 import react.RComponent
 import react.dom.*
 import store.*
-import kotlin.browser.document
-
 
 /**
  * Component used to draw top navigation bar
@@ -65,6 +59,7 @@ class NavBar : RComponent<NavbarState, NavbarState>() {
                                 attrs["aria-expanded"] = "false"
                                 attrs {
                                     onClickFunction  = {
+                                        it.stopPropagation()
                                         appStore.dispatch(NavbarState.changeUserMenuDropdownClass(
                                                 if (props.userMenuDropdownClass == "dropdown")
                                                     "dropdown open"

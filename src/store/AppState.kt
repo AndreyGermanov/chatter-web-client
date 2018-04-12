@@ -26,6 +26,8 @@ class AppState: State {
     var navbar = NavbarState()
     // holds state of User
     var user = UserState()
+    // holds state for 'Users List' page
+    var usersList = UsersListState()
 
     /**
      * Function returns string representation of Application state

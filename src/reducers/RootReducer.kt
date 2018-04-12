@@ -2,10 +2,7 @@ package reducers
 
 import lib.Action
 import lib.State
-import store.AppState
-import store.LoginFormAction
-import store.NavbarAction
-import store.UserStateAction
+import store.*
 import utils.LogLevel
 import utils.Logger
 
@@ -27,6 +24,7 @@ fun RootReducer(state: State, action: Action):AppState {
         is NavbarAction -> newState.navbar = NavbarReducer(newState.navbar,action)
         is LoginFormAction -> newState.loginForm = LoginFormReducer(newState.loginForm,action)
         is UserStateAction -> newState.user = UserStateReducer(newState.user,action)
+        is UsersListStateAction -> newState.usersList = UsersListReducer(newState.usersList,action)
     }
     Logger.log(LogLevel.DEBUG_REDUX,"Returning new state after reducing. New state $newState",
             "RootReducer","RootReducer")

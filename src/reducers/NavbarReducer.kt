@@ -2,7 +2,6 @@ package reducers
 
 import lib.Action
 import store.NavbarState
-import store.UserState
 import utils.LogLevel
 import utils.Logger
 
