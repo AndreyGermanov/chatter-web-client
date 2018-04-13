@@ -2,17 +2,26 @@ package components.app.users
 
 import kotlinx.html.InputType
 import kotlinx.html.id
+import kotlinx.html.js.onChangeFunction
+import kotlinx.html.js.onClickFunction
+import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.HTMLSelectElement
+import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
 import react.dom.*
 import store.UsersListState
+import store.appStore
 import kotlin.math.ceil
 
-
 /**
- * Component used to draw top navigation bar
+ * Component used to draw User List page
  */
 class UsersList : RComponent<UsersListState, UsersListState>() {
+
+    /****************************
+     * View rendering functions *
+     ****************************/
 
     /**
      * Function used to draw HTML of component on the screen
@@ -64,12 +73,15 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
      */
     fun RBuilder.renderHeaderNav() {
         div(classes="pull-left") {
-            button(classes="btn btn-success btn-xs") {
+            a(classes="btn btn-success btn-xs", href="#/user") {
                 span(classes="glyphicon glyphicon-plus") {}
                 span{+"New"}
             }
             +" "
             button(classes="btn btn-info btn-xs") {
+                attrs {
+                    onClickFunction = {refreshBtnClick()}
+                }
                 span(classes="glyphicon glyphicon-refresh") {}
                 span{+"Refresh"}
             }
@@ -77,8 +89,10 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         div(classes="pull-right") {
             input(type= InputType.text,classes="form-control") {
                 attrs {
+                    value = props.filter
                     id = "usersListSearchField"
                     placeholder = "Search ..."
+                    onChangeFunction = { setFilter(it) }
                 }
             }
         }
@@ -109,6 +123,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
                     attrs {
                         checked = props.isAllItemsSelected
                         id = "usersListCheckAllitems"
+                        onChangeFunction = {toggleAllItems(it)}
                     }
                 }
             }
@@ -124,6 +139,9 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
 
     /**
      * Function used to render column in table header row
+     *
+     * @param columnName: column system ID
+     * @param columnTitle: title of column
      */
     fun RBuilder.renderTableHeaderColumn(columnName:String,columnTitle:String) {
         th {
@@ -133,38 +151,51 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
                 if (props.sort.second == "ASC")
                     sortClass += " glyphicon-arrow-down"
                 else
-                    sortClass = " glyphicon-arrow-up"
+                    sortClass += " glyphicon-arrow-up"
                 span(classes=sortClass) {}
+            }
+            attrs {
+                onClickFunction = {setSort(columnName)}
             }
         }
     }
 
     /**
      * Function used to render row with provided index
+     *
+     * @param item: Link to item data row
      */
     fun RBuilder.renderTableRow(item:HashMap<String,String>) {
-        td {
-            input(type=InputType.checkBox) {
-                attrs {
-                    checked = props.selectedItems.contains(item["user_id"]!!)
+        tr {
+            td {
+                input(type = InputType.checkBox) {
+                    attrs {
+                        checked = props.selectedItems.contains(item["_id"]!!.toString())
+                        onChangeFunction = {
+                            toggleItem(it, item["_id"].toString())
+                        }
+                    }
                 }
             }
+            renderTableColumn(item, "login")
+            renderTableColumn(item, "email")
+            renderTableColumn(item, "role")
+            renderTableColumn(item, "first_name")
+            renderTableColumn(item, "last_name")
+            renderTableColumn(item, "active")
+            renderTableColumn(item, "room")
         }
-        renderTableColumn(item,"login")
-        renderTableColumn(item,"email")
-        renderTableColumn(item,"role")
-        renderTableColumn(item,"first_name")
-        renderTableColumn(item,"last_name")
-        renderTableColumn(item,"active")
-        renderTableColumn(item,"room")
     }
 
     /**
      * Function used to render table column
+     *
+     * @param item: Link to item data row
+     * @param columnName: name of column from item data row
      */
     fun RBuilder.renderTableColumn(item:HashMap<String,String>,columnName:String) {
         td {
-            a(href="#/user/${item["user_id"]!!}") {
+            a(href="#/user/${item["_id"]!!}") {
                 +(item[columnName]!!)
             }
         }
@@ -190,6 +221,10 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         div(classes="pull-right") {
             +"Show "
             select(classes="form-control inline") {
+                attrs {
+                    value = props.limit.toString()
+                    onChangeFunction = {setLimit(it)}
+                }
                 for (option in options) {
                     option {
                         attrs {
@@ -204,11 +239,17 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
             button(classes="btn btn-primary btn-xs") {
                 var displayStyle= if (props.offset==0) js("{display:'none'}") else js("{display:'inline'}")
                 attrs["style"] = displayStyle
+                attrs {
+                    onClickFunction = {prevPageBtnClick()}
+                }
                 span(classes="glyphicon glyphicon-arrow-left") {}
             }
             +" "
             select(classes="form-control inline") {
-                var pages = ceil(props.total.toDouble()/props.limit.toDouble()).toString().toInt()
+                var pages = 1
+                if (props.limit > 0) {
+                    pages = ceil(props.total.toDouble() / props.limit.toDouble()).toString().toInt()
+                }
                 for (page in 1..pages) {
                     option{
                         attrs {
@@ -218,17 +259,199 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
                         }
                     }
                 }
+                attrs {
+                    onChangeFunction = {setPage(it)}
+                }
             }
             +" "
             button(classes="btn btn-primary btn-xs") {
-                var displayStyle= if (props.offset>props.total-props.limit) js("{display:'none'}") else js("{display:'inline'}")
+                var displayStyle= if (props.offset>props.total-props.limit || props.limit==0) js("{display:'none'}") else js("{display:'inline'}")
                 attrs["style"] = displayStyle
+                attrs {
+                    onClickFunction = {nextPageBtnClick()}
+                }
                 span(classes="glyphicon glyphicon-arrow-right") {}
             }
         }
     }
+
+    /***********************
+     * Life cycle methods *
+     ***********************/
+
+    /**
+     * Function runs when component appears on the screen
+     */
+    override fun componentDidMount() {
+        if (!props.showProgressIndicator) {
+            UsersListState.loadList().exec(props)
+        }
+    }
+
+    /******************
+     * Event handlers *
+     ******************/
+
+    /**
+     * "Search ..." input field handler. Used to set filter text for list
+     *
+     * @param event: Event object, which contains link to input field, which is a source of event
+     */
+    fun setFilter(event: Event) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        val inputItem = event.target as HTMLInputElement
+        appStore.dispatch(UsersListState.Change_filter_Action(inputItem.value.trim()))
+        appStore.dispatch(UsersListState.Change_offset_Action(0))
+        UsersListState.loadList().exec(props)
+    }
+
+    /**
+     * Number of items per page dropdown change handler. Used to set "limit" field
+     *
+     * @param event: Event object, which contains link to dropdown, which is a source of event
+     */
+    fun setLimit(event: Event) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        val inputItem = event.target as HTMLSelectElement
+        appStore.dispatch(UsersListState.Change_limit_Action(inputItem.value.toInt()))
+        appStore.dispatch(UsersListState.Change_offset_Action(0))
+        UsersListState.loadList().exec(props)
+    }
+
+    /**
+     * Current page dropdown change handler. Used to set current offset of list based on selected page
+     *
+     * @param event: Event object, which contains link to dropdown, which is a source of event
+     */
+    fun setPage(event: Event) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        val inputItem = event.target as HTMLSelectElement
+        appStore.dispatch(UsersListState.Change_offset_Action(inputItem.value.toInt()))
+        UsersListState.loadList().exec(props)
+    }
+
+    /**
+     * "Next page" button click handler. Used to set offset based on next page number
+     */
+    fun nextPageBtnClick() {
+        if (props.showProgressIndicator) {
+            return
+        }
+        if (props.offset+props.limit<props.total) {
+            appStore.dispatch(UsersListState.Change_offset_Action(props.offset + props.limit))
+            UsersListState.loadList().exec(props)
+        }
+    }
+
+    /**
+     * "Previous page" button click handler. Used to set offset based on previous page number
+     */
+    fun prevPageBtnClick() {
+        if (props.showProgressIndicator) {
+            return
+        }
+        if (props.offset-props.limit>=0) {
+            appStore.dispatch(UsersListState.Change_offset_Action(props.offset-props.limit))
+            UsersListState.loadList().exec(props)
+        }
+    }
+
+    /**
+     * Table column header click handler. Used to change sort order of items in list
+     */
+    fun setSort(field:String) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        var sort:Pair<String,String> = field to "ASC"
+        if (props.sort.first == field) {
+            if (props.sort.second == "ASC") {
+                sort = field to "DESC"
+            } else {
+                sort = field to "ASC"
+            }
+        }
+        appStore.dispatch(UsersListState.Change_sort_Action(sort))
+        appStore.dispatch(UsersListState.Change_offset_Action(0))
+        UsersListState.loadList().exec(props)
+    }
+
+    /**
+     * Select checkbox of table row handler. Used to select items for group actions
+     *
+     * @param event: Event object which contains link to checkbox object which is a source of event
+     * @param id: ID of item, which need select or unselect
+     */
+    fun toggleItem(event:Event,id:String) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        val checkbox = event.target as HTMLInputElement
+        val selectedItems = props.selectedItems
+        if (checkbox.checked) {
+            if (!selectedItems.contains(id)) {
+                selectedItems.add(id)
+            }
+        } else {
+            if (selectedItems.contains(id)) {
+                selectedItems.remove(id)
+            }
+        }
+        appStore.dispatch(UsersListState.Change_selectedItems_Action(selectedItems))
+        if (selectedItems.count() == 0 || selectedItems.count() != props.items.count()) {
+            appStore.dispatch(UsersListState.Change_isAllItemsSelected_Action(false))
+        } else {
+            appStore.dispatch(UsersListState.Change_isAllItemsSelected_Action(true))
+        }
+    }
+
+    /**
+     * Select checkbox of table header handler. Used to select or deselect all items in a table
+     *
+     * @param event: Event object which contains link to checkbox object which is a source of event
+     */
+    fun toggleAllItems(event:Event) {
+        if (props.showProgressIndicator) {
+            return
+        }
+        val checkbox = event.target as HTMLInputElement
+        val selectedItems = props.selectedItems
+        if (!checkbox.checked) {
+            selectedItems.clear()
+        } else {
+            for (item in props.items) {
+                if (item["_id"]!=null && !selectedItems.contains(item["_id"].toString())) {
+                    selectedItems.add(item["_id"].toString())
+                }
+            }
+        }
+        appStore.dispatch(UsersListState.Change_selectedItems_Action(selectedItems))
+        appStore.dispatch(UsersListState.Change_isAllItemsSelected_Action(checkbox.checked))
+    }
+
+    /**
+     * "Refresh" button click handler
+     */
+    fun refreshBtnClick() {
+        if (props.showProgressIndicator) {
+            return
+        }
+        UsersListState.loadList().exec(props)
+    }
 }
 
+/**
+ * Class constructor. Runs when component initiates and before it redraws itself
+ *
+ * @param state - object with all properties from Application state, which component can display
+ * or use in it functions
+ */
 fun RBuilder.usersList(state:UsersListState) = child(UsersList::class) {
     attrs.error = state.error
     attrs.showProgressIndicator = state.showProgressIndicator

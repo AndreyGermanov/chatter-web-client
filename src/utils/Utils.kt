@@ -95,19 +95,41 @@ fun guid():String {
  * @return JSON as string
  */
 fun stringifyJSON(obj:HashMap<String,Any>):String {
-    var result = Array<Pair<String,Any>>(obj.count(),{it -> "0" to 0})
+    var result:Array<Pair<String,Any>>? = null
     for ((index,value) in obj) {
         if (jsTypeOf(value) != "object") {
-            result.set(result.count(),index to value)
+            if (result == null) {
+                result = Array(obj.count(),{index to value})
+            } else {
+                result.set(result.count(), index to value)
+            }
         } else {
             if (value is HashMap<*,*>) {
-                result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
+                if (result == null) {
+                    result = Array(obj.count(), { index to stringifyJSON(value as HashMap<String, Any>) })
+                } else {
+                    result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
+                }
+            } else if (value is Array<*>) {
+                if (result == null) {
+                    result = Array(obj.count(),{index to JSON.stringify(value)})
+                } else {
+                    result.set(result.count(), index to JSON.stringify(value))
+                }
             } else {
-                result.set(result.count(),index to "<object>")
+                if (result == null) {
+                    result = Array(obj.count(),{index to "<object>"})
+                } else {
+                    result.set(result.count(), index to "<object>")
+                }
             }
         }
     }
-    return JSON.stringify(json(*result))
+    if (result!=null) {
+        return JSON.stringify(json(*result))
+    } else {
+        return ""
+    }
 }
 
 /**
@@ -150,3 +172,4 @@ fun parseJSON(text:String):HashMap<String,Any> {
     var text = text
     return jsonToHashMap(JSON.parse(text))
 }
+
