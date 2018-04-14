@@ -9,13 +9,11 @@ import lib.StoreSubscriber
 import react.*
 import react.dom.div
 import react.dom.span
-import react.dom.style
 import react.router.dom.*
 import store.AppScreen
 import store.AppState
 import store.LoginFormState
 import store.appStore
-
 
 class App : RComponent<RProps, AppState>(), StoreSubscriber {
 
@@ -93,6 +91,9 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
                                 appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.ROOMS_LIST))
                             }
                             span {}
+                        }
+                        route("/",strict=true) {
+                            redirect("", "/users")
                         }
                     }
                 }

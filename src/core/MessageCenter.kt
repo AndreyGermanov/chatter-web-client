@@ -182,7 +182,7 @@ object MessageCenter {
      */
     fun run() {
         Logger.log(LogLevel.DEBUG,"Message center started","MessageCenter","run")
-        window.setInterval({this.loop()},1000)
+        window.setInterval({this.loop()},100)
     }
 
     /***************************
@@ -595,6 +595,12 @@ object MessageCenter {
         if (response == null || jsTypeOf(response) == "undefined") {
             Logger.log(LogLevel.WARNING,"Incorrect JSON text response received. Response body: " +
                     "$text","MessageCenter","onTextMessage")
+            return
+        }
+        if (response["status_code"]!=null && response["status_code"].toString() == "AUTHENTICATION_ERROR") {
+            localStorage.removeItem("user_id")
+            localStorage.removeItem("session_id")
+            window.location.href = "#/login"
             return
         }
         val request_id = response["request_id"] as? String

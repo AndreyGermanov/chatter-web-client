@@ -22,7 +22,7 @@ object Logger {
 
     // Array of enabled log levels. Messages with log level out of this list will
     // be silently ignored
-    var loggerLevels = arrayOf(LogLevel.ERROR, LogLevel.WARNING, LogLevel.INFO, LogLevel.DEBUG)
+    var loggerLevels = arrayOf(LogLevel.ERROR, LogLevel.WARNING, LogLevel.INFO, LogLevel.DEBUG, LogLevel.DEBUG_REDUX)
 
     /**
      * Function used to format date to string

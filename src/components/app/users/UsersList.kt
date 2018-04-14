@@ -59,7 +59,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
     fun RBuilder.renderErrorMessage() {
         div(classes="col-md-12 alert alert-danger"){
             span(classes="glyphicon glyphicon-exclamation-sign") {
-                +"&nbsp;"
+                +" "
             }
             span{
 
@@ -283,9 +283,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
      * Function runs when component appears on the screen
      */
     override fun componentDidMount() {
-        if (!props.showProgressIndicator) {
-            UsersListState.loadList().exec(props)
-        }
+        UsersListState.loadList().exec()
     }
 
     /******************
@@ -304,7 +302,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         val inputItem = event.target as HTMLInputElement
         appStore.dispatch(UsersListState.Change_filter_Action(inputItem.value.trim()))
         appStore.dispatch(UsersListState.Change_offset_Action(0))
-        UsersListState.loadList().exec(props)
+        UsersListState.loadList().exec()
     }
 
     /**
@@ -319,7 +317,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         val inputItem = event.target as HTMLSelectElement
         appStore.dispatch(UsersListState.Change_limit_Action(inputItem.value.toInt()))
         appStore.dispatch(UsersListState.Change_offset_Action(0))
-        UsersListState.loadList().exec(props)
+        UsersListState.loadList().exec()
     }
 
     /**
@@ -333,7 +331,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         }
         val inputItem = event.target as HTMLSelectElement
         appStore.dispatch(UsersListState.Change_offset_Action(inputItem.value.toInt()))
-        UsersListState.loadList().exec(props)
+        UsersListState.loadList().exec()
     }
 
     /**
@@ -345,7 +343,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         }
         if (props.offset+props.limit<props.total) {
             appStore.dispatch(UsersListState.Change_offset_Action(props.offset + props.limit))
-            UsersListState.loadList().exec(props)
+            UsersListState.loadList().exec()
         }
     }
 
@@ -358,7 +356,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         }
         if (props.offset-props.limit>=0) {
             appStore.dispatch(UsersListState.Change_offset_Action(props.offset-props.limit))
-            UsersListState.loadList().exec(props)
+            UsersListState.loadList().exec()
         }
     }
 
@@ -379,7 +377,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         }
         appStore.dispatch(UsersListState.Change_sort_Action(sort))
         appStore.dispatch(UsersListState.Change_offset_Action(0))
-        UsersListState.loadList().exec(props)
+        UsersListState.loadList().exec()
     }
 
     /**
@@ -442,7 +440,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         if (props.showProgressIndicator) {
             return
         }
-        UsersListState.loadList().exec(props)
+        UsersListState.loadList().exec()
     }
 }
 

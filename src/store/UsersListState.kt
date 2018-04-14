@@ -65,15 +65,18 @@ class UsersListState: State {
          *
          * @param state: data filter,sorting and limit options, used to send to MessageCenter
          */
-        fun exec(state:UsersListState) {
+        fun exec(props:UsersListState?=null) {
             Logger.log(LogLevel.DEBUG,"Begin loadList actions to load list of users. Preparing request",
                     "UsersListState","loadList.exec")
+            var state:UsersListState?
+            if (props == null) {
+                state = (appStore.state as AppState).usersList!!
+            } else {
+                state = props
+            }
             appStore.dispatch(UsersListState.Change_error_Action(""))
             if (!MessageCenter.isConnected) {
                 appStore.dispatch(UsersListState.Change_error_Action(UsersListError.RESULT_ERROR_CONNECTION_ERROR.getMessage()))
-                return
-            }
-            if (state.showProgressIndicator) {
                 return
             }
             appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(true))
@@ -121,10 +124,12 @@ class UsersListState: State {
             if (response["status"] == "ok" && response["list"]!=null) {
                 val list = response["list"] as? HashMap<String,Any>
                 if (list != null) {
-                    val items = ArrayList<HashMap<String,String>>()
+                    val items = ArrayList<HashMap<String,String>>(list.count())
+
                     val state = appStore.state as AppState
                     val selectedItems = state.usersList.selectedItems
                     for ((index,item) in list) {
+                        console.log(index)
                         val item = item as HashMap<String,Any>
                         var role = "User"
                         if (item["role"].toString() == "2") {
