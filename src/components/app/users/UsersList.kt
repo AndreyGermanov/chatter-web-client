@@ -122,7 +122,6 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
                 input(type=InputType.checkBox) {
                     attrs {
                         checked = props.isAllItemsSelected
-                        id = "usersListCheckAllitems"
                         onChangeFunction = {toggleAllItems(it)}
                     }
                 }
@@ -133,7 +132,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
             renderTableHeaderColumn("first_name","First Name")
             renderTableHeaderColumn("last_name","Last Name")
             renderTableHeaderColumn("active","Active")
-            renderTableHeaderColumn("room","Room")
+            renderTableHeaderColumn("default_room","Room")
         }
     }
 
@@ -183,7 +182,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
             renderTableColumn(item, "first_name")
             renderTableColumn(item, "last_name")
             renderTableColumn(item, "active")
-            renderTableColumn(item, "room")
+            renderTableColumn(item, "default_room")
         }
     }
 
@@ -458,6 +457,7 @@ fun RBuilder.usersList(state:UsersListState) = child(UsersList::class) {
     attrs.limit = state.limit
     attrs.offset = state.offset
     attrs.selectedItems = state.selectedItems
+    attrs.isAllItemsSelected = state.isAllItemsSelected
     attrs.sort = state.sort
     attrs.total = state.total
 }

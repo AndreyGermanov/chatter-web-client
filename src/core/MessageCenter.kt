@@ -600,7 +600,7 @@ object MessageCenter {
         if (response["status_code"]!=null && response["status_code"].toString() == "AUTHENTICATION_ERROR") {
             localStorage.removeItem("user_id")
             localStorage.removeItem("session_id")
-            window.location.href = "#/login"
+            window.location.reload()
             return
         }
         val request_id = response["request_id"] as? String

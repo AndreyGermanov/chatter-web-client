@@ -85,7 +85,9 @@ class UsersListState: State {
                     "sender" to this,
                     "offset" to state.offset,
                     "sort" to hashMapOf(state.sort),
-                    "fields" to arrayOf("_id","login","email","role","first_name","last_name","default_room","active")
+                    "fields" to arrayOf("_id","login","email","role","first_name","last_name","default_room","active"),
+                    "get_total" to true,
+                    "get_presentations" to true
             )
             if (!state.filter.trim().isEmpty()) {
                 request["filter"] = state.filter.trim()
@@ -127,41 +129,49 @@ class UsersListState: State {
                     val items = ArrayList<HashMap<String,String>>(list.count())
 
                     val state = appStore.state as AppState
-                    val selectedItems = state.usersList.selectedItems
-                    for ((index,item) in list) {
-                        console.log(index)
-                        val item = item as HashMap<String,Any>
-                        var role = "User"
-                        if (item["role"].toString() == "2") {
-                            role = "Admin"
+                    val selectedItems = ArrayList<String>()
+                    for ((index,obj) in list) {
+                        var item:HashMap<String,Any>? = null
+                        if (obj is HashMap<*,*>) {
+                            item = obj as HashMap<String,Any>
+                        } else {
+                            var count = 0
+                            if (obj is String) {
+                                try {
+                                    count = obj.toString().toInt()
+                                } catch (e:Exception) {
+                                    Logger.log(LogLevel.WARNING,"Could not parse 'total' row from '$obj' value",
+                                            "UsersListState","loadList.handleWebSocketResponse")
+                                }
+                            } else if (obj is Int) {
+                                count = obj as Int
+                            }
+                            appStore.dispatch(UsersListState.Change_total_Action(count))
+                            continue
                         }
-                        val active = if (item["active"].toString().toBoolean()) "Active" else "Inactive"
-                        var first_name = ""
-                        if (item["first_name"] != null) {
-                            first_name = item["first_name"].toString().trim()
-                        }
-                        var last_name = ""
-                        if (item["last_name"] != null) {
-                            last_name = item["last_name"].toString().trim()
-                        }
-                        var default_room = ""
-                        if (item["default_room"] != null) {
-                            default_room = item["default_room"].toString().trim()
-                        }
-                        var user_id = item["_id"].toString().trim()
+                        val role = item["role_text"]?.toString() ?: ""
+                        val active = item["active_text"]?.toString() ?: ""
+                        val firstName = item["first_name"]?.toString()?.trim() ?: ""
+                        val lastName = item["last_name"]?.toString()?.trim() ?: ""
+                        val defaultRoom = item["default_room_text"]?.toString()?.trim() ?: ""
+                        val userId = item["_id"].toString().trim()
                         items.add(hashMapOf(
-                                "_id" to user_id,
+                                "_id" to userId,
                                 "login" to item["login"].toString().trim(),
                                 "email" to item["email"].toString().trim(),
                                 "role" to role,
                                 "active" to active,
-                                "first_name" to first_name,
-                                "last_name" to last_name,
-                                "room" to default_room
+                                "first_name" to firstName,
+                                "last_name" to lastName,
+                                "default_room" to defaultRoom
                         ))
+                        if (state.usersList.selectedItems.contains(userId)) {
+                            selectedItems.add(userId)
+                        }
                     }
                     MessageCenter.removeFromRequestsWaitingResponses(request_id)
                     appStore.dispatch(UsersListState.Change_items_Action(items))
+                    appStore.dispatch(UsersListState.Change_selectedItems_Action(selectedItems))
                 }
             }
         }
