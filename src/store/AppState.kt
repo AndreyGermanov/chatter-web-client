@@ -2,6 +2,7 @@ package store
 
 import lib.Action
 import lib.State
+import react.RProps
 
 /**
  * Base interface, which all enum classes should implement
@@ -28,6 +29,8 @@ class AppState: State {
     var user = UserState()
     // holds state for 'Users List' page
     var usersList = UsersListState()
+    // holds state fo 'User Detail' page
+    var userDetail = UserDetailState()
 
     /**
      * Function returns string representation of Application state
@@ -60,6 +63,7 @@ interface AppAction: Action {}
 enum class AppScreen(val value:String): SmartEnum {
     LOGIN_FORM("LOGIN_FORM"),
     USERS_LIST("USERS_LIST"),
+    USER_DETAIL("USER_DETAIL"),
     ROOMS_LIST("ROOMS_LIST"),
     SESSIONS_LIST("SESSIONS_LIST"),
     MESSAGES_LIST("MESSAGES_LIST");
@@ -68,6 +72,7 @@ enum class AppScreen(val value:String): SmartEnum {
         when(this) {
             LOGIN_FORM -> result = "Login"
             USERS_LIST -> result = "Users"
+            USER_DETAIL -> result = "User"
             ROOMS_LIST -> result = "Rooms"
             SESSIONS_LIST -> result = "Sessions"
             MESSAGES_LIST -> result = "Messages"
@@ -75,4 +80,11 @@ enum class AppScreen(val value:String): SmartEnum {
         return result
     }
 
+}
+
+/**
+ Abstract interface which defines path with :id param in URL route for router
+ */
+interface idProps: RProps {
+    var id:String?
 }

@@ -6,7 +6,7 @@ import utils.LogLevel
 import utils.Logger
 
 /**
- * Reducer function which applies actions to state of login form
+ * Reducer function which applies actions to state of User List form
  *
  * @param state Link to source application state
  * @param action Action to apply to source state

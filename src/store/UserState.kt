@@ -14,13 +14,47 @@ enum class UserRole(val value:Int) {
          *
          * @return UserRole
          */
-        public fun getValueByCode(code:Int):UserRole {
-            var result = USER
-            when (code) {
-                1 -> result = USER
-                2 -> result = ADMIN
+        fun getValueByCode(code:Int):UserRole {
+            return when(code) {
+                1 -> USER
+                2 -> ADMIN
+                else -> USER
+            }
+        }
+        /**
+         * Returns list of roles as HashMap<String,String>,
+         * suitable to use as source for Dropdown list
+         *
+         * @returns Hashmap with intems in form of <roleCode,roleString>
+         */
+        fun getHashMap():HashMap<String,String> {
+            val result = HashMap<String,String>()
+            for (item in enumValues<UserRole>()) {
+                result[item.getCodeByValue().toString()] = item.toString()
             }
             return result
+        }
+    }
+    /**
+     * Returns numeric code of role for selected role
+     *
+     * @return Int
+     */
+    fun getCodeByValue():Int {
+        return when(this) {
+            USER -> 1
+            ADMIN -> 2
+        }
+    }
+    /**
+     * Returns text representation of role
+     *
+     * @return String
+     */
+    override fun toString():String {
+        return when(this) {
+            USER -> "User"
+            ADMIN -> "Administrator"
         }
     }
 }
@@ -28,7 +62,7 @@ enum class UserRole(val value:Int) {
 /**
  * User genders definitions
  */
-enum class Gender(val value:String) {
+enum class Gender(val value:String):SmartEnum {
     M("M"),
     F( "F");
     companion object {
@@ -37,13 +71,31 @@ enum class Gender(val value:String) {
          *
          * @return Gender
          */
-        public fun getValueByCode(code:String):Gender {
-            var result = M
-            when (code) {
-                "M" -> result = M
-                "F" -> result = F
+        fun getValueByCode(code:String):Gender {
+            return when (code) {
+                "M" -> M
+                "F" -> F
+                else -> M
+            }
+        }
+        /**
+         * Returns list of roles as HashMap<String,String>,
+         * suitable to use as source for Dropdown list
+         *
+         * @returns Hashmap with intems in form of <roleCode,roleString>
+         */
+        fun getHashMap():HashMap<String,String> {
+            val result = HashMap<String,String>()
+            for (item in enumValues<Gender>()) {
+                result[item.name] = item.getMessage()
             }
             return result
+        }
+    }
+    override fun getMessage():String {
+        return when(this) {
+            M -> "Male"
+            F -> "Female"
         }
     }
 }

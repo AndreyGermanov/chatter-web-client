@@ -25,6 +25,7 @@ fun RootReducer(state: State, action: Action):AppState {
         is LoginFormAction -> newState.loginForm = LoginFormReducer(newState.loginForm,action)
         is UserStateAction -> newState.user = UserStateReducer(newState.user,action)
         is UsersListStateAction -> newState.usersList = UsersListReducer(newState.usersList,action)
+        is UserDetailAction -> newState.userDetail = UserDetailReducer(newState.userDetail,action)
     }
     Logger.log(LogLevel.DEBUG_REDUX,"Returning new state after reducing. New state $newState",
             "RootReducer","RootReducer")

@@ -1,6 +1,7 @@
 package components.app
 
 import components.app.login.loginForm
+import components.app.users.userDetail
 import components.app.users.usersList
 import core.MessageCenter
 import kotlinx.html.js.onClickFunction
@@ -10,10 +11,7 @@ import react.*
 import react.dom.div
 import react.dom.span
 import react.router.dom.*
-import store.AppScreen
-import store.AppState
-import store.LoginFormState
-import store.appStore
+import store.*
 
 class App : RComponent<RProps, AppState>(), StoreSubscriber {
 
@@ -91,6 +89,21 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
                                 appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.ROOMS_LIST))
                             }
                             span {}
+                        }
+                        route<idProps>( "/user/:id") { props ->
+                            if (state.currentScreen != AppScreen.USER_DETAIL) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USER_DETAIL))
+                            }
+                            if (props.match.params.id!=null && props.match.params.id != state.userDetail.user_id) {
+                                appStore.dispatch(UserDetailState.Change_user_id_action(props.match.params.id.toString()))
+                            }
+                            userDetail(state.userDetail)
+                        }
+                        route("/user") {
+                            if (state.currentScreen != AppScreen.USER_DETAIL) {
+                                appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USER_DETAIL))
+                            }
+                            userDetail(state.userDetail)
                         }
                         route("/",strict=true) {
                             redirect("", "/users")

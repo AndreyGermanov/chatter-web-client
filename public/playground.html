@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="plugins/bootstrap/bootstrap.css">
     <link rel="stylesheet" href="css/style_v1.css">
     <link rel="stylesheet" href="plugins/fa/css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="plugins/bootstrap/datetimepicker.css">
     <title>React Kotlin App</title>
     <style>
         .table-header {
@@ -22,6 +23,15 @@
         }
         .yellow {
             color: yellow;
+        }
+        .clear {
+            clear: both;
+        }
+        .transparent {
+            background: transparent;
+        }
+        .error {
+            color: red;
         }
     </style>
 </head>
@@ -139,8 +149,122 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3><span class="fas fa-users"></span><span>Users</span></h3>
+                </div>
+                <div class="panel-body">
+                    <div class="col-md-12 alert alert-success"><span class="glyphicon glyphicon-ok">&nbsp;</span><span>Save successfull</span></div>
+                    <div class="col-md-12 alert alert-danger"><span class="glyphicon glyphicon-exclamation-sign">&nbsp;</span><span>System error</span></div>
+                    <div class="pull-left">
+                        <button class="btn btn-primary btn-xs">
+                            <span class="glyphicon glyphicon-arrow-left"/>Back
+                        </button>
+                        <button class="btn btn-success btn-xs">
+                            <span class="glyphicon glyphicon-save"/>Save
+                        </button>
+                    </div>
+                    <div class="clear"/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Login</label>
+                            <div class="col-md-10">
+                                <input type="text" class="form-control"/>
+                                <span class="error">This field is required</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Password</label>
+                            <div class="col-md-10">
+                                <input type="password" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Confirm</label>
+                            <div class="col-md-10">
+                                <input type="password" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Email</label>
+                            <div class="col-md-10">
+                                <input type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-1 col-md-offset-2">
+                                <input type="checkbox"/>&nbsp;<label class="control-label">Active</label>
+                            </div>
+                            <div class="col-md-9">
+                                <button class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-envelope"/>&nbsp;Send activation email</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Default room</label>
+                            <div class="col-md-10">
+                                <select class="form-control">
+                                    <option value="r1">Room 1</option>
+                                    <option value="r2">Room 2</option>
+                                    <option value="r3">Room 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Role</label>
+                            <div class="col-md-10">
+                                <select class="form-control">
+                                    <option value="1">User</option>
+                                    <option value="r2">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <hr/>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">First name</label>
+                            <div class="col-md-10">
+                                <input type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Last name</label>
+                            <div class="col-md-10">
+                                <input type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Gender</label>
+                            <div class="col-md-10">
+                                <button class="btn btn-primary">Male</button>
+                                <button class="btn btn-default transparent">Female</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Date of birth</label>
+                            <div class="col-md-10">
+                                <input class="datetimepicker form-control" type="text"/>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="plugins/jquery/jquery.min.js"></script>
 <script src="plugins/bootstrap/bootstrap.js"></script>
+<script src="plugins/momentjs/momentjs.js"></script>
+<script src="plugins/bootstrap/datetimepicker.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $('.datetimepicker').datetimepicker({
+            format: "MM/DD/YYYY"
+        });
+    });
+</script>
 </body>
 </html>

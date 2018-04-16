@@ -33,3 +33,9 @@ body {
 .yellow {
     color: yellow;
 }
+.clear {
+    clear: both;
+}
+.transparent {
+    background: transparent;
+}
