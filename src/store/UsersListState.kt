@@ -59,7 +59,7 @@ class UsersListState: State {
     /**
      * Action which loads users list from MessageCenter, using current filtering settings
      */
-    class loadList: MessageCenterResponseListener {
+    class LoadList: MessageCenterResponseListener {
         /**
          * Action executor, prepares request to server and places it to pendingRequests queue of MessageCenter
          *
@@ -67,7 +67,7 @@ class UsersListState: State {
          */
         fun exec(props:UsersListState?=null) {
             Logger.log(LogLevel.DEBUG,"Begin loadList actions to load list of users. Preparing request",
-                    "UsersListState","loadList.exec")
+                    "UsersListState","LoadList.exec")
             var state:UsersListState?
             if (props == null) {
                 state = (appStore.state as AppState).usersList!!
@@ -96,14 +96,14 @@ class UsersListState: State {
                 request["limit"] = state.limit
             }
             Logger.log(LogLevel.DEBUG,"Prepared request for MessageCenter. Request body: " +
-                    "${stringifyJSON(request)}","UsersListState","loadList.exec")
+                    "${stringifyJSON(request)}","UsersListState","LoadList.exec")
             val result = MessageCenter.addToPendingRequests(request)
             if (result != null) {
                 Logger.log(LogLevel.DEBUG, "Added request to MessageCenter pending requests queue. " +
-                        "Added request: ${stringifyJSON(result)}", "UsersListState","loadList.exec")
+                        "Added request: ${stringifyJSON(result)}", "UsersListState","LoadList.exec")
             } else {
                 Logger.log(LogLevel.WARNING, "Could not add request to MessageCenter pending requests queue. " +
-                        "Request: ${stringifyJSON(request)}")
+                        "Request: ${stringifyJSON(request)}","UsersListState","LoadList.exec")
             }
         }
 
@@ -116,11 +116,11 @@ class UsersListState: State {
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>) {
             Logger.log(LogLevel.DEBUG,"Received response from WebSocket server for request $request_id. " +
                     "Response body: ${stringifyJSON(response)}",
-                    "UsersListState","loadList.handleWebSocketResponse")
+                    "UsersListState","LoadList.handleWebSocketResponse")
             appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(false))
             if (response["status"]==null) {
                 Logger.log(LogLevel.WARNING,"Response does not contain 'status' field",
-                        "UsersListState","loadList.handleWebSocketResponse")
+                        "UsersListState","LoadList.handleWebSocketResponse")
                 return
             }
             if (response["status"] == "ok" && response["list"]!=null) {
@@ -141,7 +141,7 @@ class UsersListState: State {
                                     count = obj.toString().toInt()
                                 } catch (e:Exception) {
                                     Logger.log(LogLevel.WARNING,"Could not parse 'total' row from '$obj' value",
-                                            "UsersListState","loadList.handleWebSocketResponse")
+                                            "UsersListState","LoadList.handleWebSocketResponse")
                                 }
                             } else if (obj is Int) {
                                 count = obj as Int

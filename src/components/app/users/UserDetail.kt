@@ -247,7 +247,13 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
             val birthDate = e.date.utc().unix()
             setBirthDate(birthDate)
         })
-        setBirthDate(props.birthDate)
+        if (props.user_id == null || props.user_id.toString().isEmpty()) {
+            setBirthDate(props.birthDate)
+            return
+        }
+        UserDetailState.LoadItem().exec(props.user_id.toString()) {
+            setBirthDate(this@UserDetail.props.birthDate)
+        }
     }
 
     /******************

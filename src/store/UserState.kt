@@ -82,7 +82,7 @@ enum class Gender(val value:String):SmartEnum {
          * Returns list of roles as HashMap<String,String>,
          * suitable to use as source for Dropdown list
          *
-         * @returns Hashmap with intems in form of <roleCode,roleString>
+         * @returns Hashmap with intems in form of <gender abbreviation,gender string>
          */
         fun getHashMap():HashMap<String,String> {
             val result = HashMap<String,String>()
@@ -92,6 +92,12 @@ enum class Gender(val value:String):SmartEnum {
             return result
         }
     }
+
+    /**
+     * Function used to get string presentation of Gender object
+     *
+     * @returns String presenting gender object
+     */
     override fun getMessage():String {
         return when(this) {
             M -> "Male"
