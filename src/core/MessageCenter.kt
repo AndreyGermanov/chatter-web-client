@@ -708,5 +708,5 @@ interface MessageCenterResponseListener {
      * @param request_id : Request id for which response received
      * @param response: Received response body
      */
-    fun handleWebSocketResponse(request_id:String,response:HashMap<String,Any>)
+    fun handleWebSocketResponse(request_id:String,response:HashMap<String,Any>): Any?
 }

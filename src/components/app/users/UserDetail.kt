@@ -8,11 +8,13 @@ import kotlinx.html.js.onSubmitFunction
 import lib.jQuery
 import lib.moment
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.HTMLSelectElement
 import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
 import react.dom.*
 import store.*
+import kotlin.browser.document
 
 
 /**
@@ -133,6 +135,7 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
                 div(classes="col-md-1 col-md-offset-2") {
                     input(type=InputType.checkBox) {
                         attrs {
+                            id = "activeBox"
                             checked = props.active
                             onChangeFunction = {setActive(it)}
                         }
@@ -247,12 +250,22 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
             val birthDate = e.date.utc().unix()
             setBirthDate(birthDate)
         })
-        if (props.user_id == null || props.user_id.toString().isEmpty()) {
-            setBirthDate(props.birthDate)
-            return
+        var active_checkbox = document.getElementById("activeBox") as HTMLInputElement
+        active_checkbox.defaultChecked = false
+        active_checkbox.checked = false
+        UserDetailState.GetRoomsList().exec {
+            if (props.user_id != null && !props.user_id.toString().isEmpty()) {
+                UserDetailState.ClearData().exec()
+                UserDetailState.LoadItem().exec(props.user_id.toString())
+            } else {
+                UserDetailState.ClearData().exec()
+            }
         }
-        UserDetailState.LoadItem().exec(props.user_id.toString()) {
-            setBirthDate(this@UserDetail.props.birthDate)
+    }
+
+    override fun componentDidUpdate(prevProps: UserDetailState, prevState: UserDetailState) {
+        if (prevProps.birthDate != props.birthDate) {
+            setBirthDate(props.birthDate)
         }
     }
 
@@ -267,6 +280,7 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
         if (props.showProgressIndicator) {
             return
         }
+        UserDetailState.SaveItem().exec()
 
     }
 
@@ -286,8 +300,14 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
      * @param fieldName: Name of field to set
      */
     fun changeTextField(event:Event,fieldName:String) {
-        val inputItem = event.target as HTMLInputElement
-        val value = inputItem.value.trim()
+        var value = ""
+        if (fieldName == "default_room" || fieldName == "role") {
+            val inputItem = event.target as HTMLSelectElement
+            value = inputItem.value.trim()
+        } else {
+            val inputItem = event.target as HTMLInputElement
+            value = inputItem.value.trim()
+        }
         when(fieldName) {
             "login" -> appStore.dispatch(UserDetailState.Change_login_action(value))
             "email" -> appStore.dispatch(UserDetailState.Change_email_action(value))
@@ -321,6 +341,7 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
      * @param value: Timestamp in seconds
      */
     fun setBirthDate(timestamp:dynamic) {
+        console.log(timestamp.toString().toInt())
         appStore.dispatch(UserDetailState.Change_birthDate_action(timestamp.toString().toInt()))
         this.birthDatePicker.data("DateTimePicker").date(moment(timestamp*1000))
     }

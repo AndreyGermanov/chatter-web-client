@@ -14,11 +14,11 @@ enum class UserRole(val value:Int) {
          *
          * @return UserRole
          */
-        fun getValueByCode(code:Int):UserRole {
+        fun getValueByCode(code:Int):UserRole? {
             return when(code) {
                 1 -> USER
                 2 -> ADMIN
-                else -> USER
+                else -> null
             }
         }
         /**

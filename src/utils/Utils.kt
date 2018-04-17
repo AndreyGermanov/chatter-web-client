@@ -4,6 +4,7 @@ import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint32Array
 import kotlin.js.Json
 import kotlin.js.Math.random
+import kotlin.js.RegExp
 import kotlin.js.json
 import kotlin.math.floor
 
@@ -173,3 +174,21 @@ fun parseJSON(text:String):HashMap<String,Any> {
     return jsonToHashMap(JSON.parse(text))
 }
 
+/**
+ * Function validates email address
+ *
+ * @param email Email address to check
+ * @return True if provided email address is correct and False otherwise
+ */
+fun isValidEmail(email: String): Boolean {
+    var result = false
+    try {
+
+        val reg = RegExp("^(([^<>()[\\]\\\\.,;:\\s@\\\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\\\"]+)*)|(\\\".+\\\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))\$")
+        return reg.test(email.trim())
+    } catch (e:Exception) {
+        console.log(e)
+        result = false
+    }
+    return result
+}

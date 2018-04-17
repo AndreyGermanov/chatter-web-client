@@ -96,6 +96,8 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
                             }
                             if (props.match.params.id!=null && props.match.params.id != state.userDetail.user_id) {
                                 appStore.dispatch(UserDetailState.Change_user_id_action(props.match.params.id.toString()))
+                            } else if (props.match.params.id == null) {
+                                appStore.dispatch(UserDetailState.Change_user_id_action(""))
                             }
                             userDetail(state.userDetail)
                         }
@@ -103,7 +105,11 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
                             if (state.currentScreen != AppScreen.USER_DETAIL) {
                                 appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USER_DETAIL))
                             }
+                            if (state.userDetail.user_id != null && !state.userDetail.user_id!!.isEmpty()) {
+                                appStore.dispatch(UserDetailState.Change_user_id_action(""))
+                            }
                             userDetail(state.userDetail)
+
                         }
                         route("/",strict=true) {
                             redirect("", "/users")
