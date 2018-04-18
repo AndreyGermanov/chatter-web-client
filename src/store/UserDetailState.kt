@@ -242,7 +242,7 @@ class UserDetailState: State {
                 window.location.assign("#/user/$user_id")
                 window.location.reload()
             } else if (request["action"] == "admin_update_user") {
-                appStore.dispatch(UserDetailState.Change_successMessage_action("User data updated succesfully"))
+                appStore.dispatch(UserDetailState.Change_successMessage_action(UserDetailError.RESULT_OK.getMessage()))
                 Logger.log(LogLevel.DEBUG, "Item '${state.userDetail.login}' updated successfully",
                         "UserDetailState","SaveItem.handleWebSocketResponse")
             }
@@ -299,6 +299,7 @@ class UserDetailState: State {
             } else {
                 Logger.log(LogLevel.WARNING, "Could not add request to MessageCenter pending requests queue. " +
                         "Request: ${stringifyJSON(request)}","UsersDetailState","GetRoomsList.exec")
+                appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
             }
         }
 
@@ -354,6 +355,83 @@ class UserDetailState: State {
             if (this.callback != null) {
                 this.callback!!()
             }
+            return null
+        }
+    }
+
+    /**
+     * Action used to request server to send user activation email to current user
+     */
+    class SendActivationEmail: MessageCenterResponseListener {
+
+        /**
+         * Function used to start action. Prepares request, and sends it to MessageCenter
+         */
+        fun exec() {
+            val state = appStore.state as AppState
+            val user = state.userDetail
+            Logger.log(LogLevel.DEBUG,"Starting SendActivationEmail action.",
+                    "UserDetailState","SendActivationEmail.exec")
+            if (user.showProgressIndicator) {
+                Logger.log(LogLevel.WARNING,"Could not start request, because other request already going",
+                        "UserDetailState","GetRoomsList.exec")
+                return
+            }
+            if (user.user_id == null || user.user_id!!.isEmpty()) {
+                appStore.dispatch(UserDetailState.Change_errors_action(
+                        hashMapOf("general" to UserDetailError.RESULT_ERROR_OBJECT_NOT_FOUND)))
+                Logger.log(LogLevel.DEBUG,"User id is empty.",
+                        "UserDetailState","SendActivationEmail.exec")
+                return
+            }
+            if (!MessageCenter.isConnected) {
+                appStore.dispatch(UserDetailState.Change_errors_action(
+                        hashMapOf("general" to UserDetailError.RESULT_ERROR_CONNECTION_ERROR)))
+                Logger.log(LogLevel.DEBUG,"Server connection error.",
+                        "UserDetailState","SendActivationEmail.exec")
+                return
+            }
+            appStore.dispatch(UserDetailState.Change_errors_action(HashMap<String,UserDetailError>()))
+            appStore.dispatch(UserDetailState.Change_successMessage_action(""))
+            Logger.log(LogLevel.DEBUG,"Validating data and preparing request body.",
+                    "UserDetailState","SendActivationEmail.exec")
+            val request = hashMapOf(
+                    "action" to "admin_send_activation_email",
+                    "sender" to this,
+                    "id" to user.user_id!!
+            )
+
+            appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(true))
+            Logger.log(LogLevel.DEBUG,"Prepared request for MessageCenter. Request body: " +
+                    "${stringifyJSON(request)}","UsersDetailState","SendActivationEmail.exec")
+            val result = MessageCenter.addToPendingRequests(request)
+            if (result != null) {
+                Logger.log(LogLevel.DEBUG, "Added request to MessageCenter pending requests queue. " +
+                        "Added request: ${stringifyJSON(result)}", "UsersDetailState","SendActivationEmail.exec")
+            } else {
+                Logger.log(LogLevel.WARNING, "Could not add request to MessageCenter pending requests queue. " +
+                        "Request: ${stringifyJSON(request)}","UsersDetailState","GetRoomsList.exec")
+                appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
+            }
+        }
+
+        /**
+         * Function receives response from MessageCenter, after it processes request placed to queue
+         *
+         * @param request_id: ID of processed request
+         * param response: Body of response from server
+         *
+         * @returns custom result or nothing, depending on sense of this request. In this case, it returns
+         * nothing
+         */
+        override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
+            appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
+            var state = appStore.state as AppState
+            if (!state.userDetail.processResponse(response)) {
+                return null
+            }
+            appStore.dispatch(UserDetailState.Change_successMessage_action(
+                    UserDetailError.RESULT_OK_SEND_ACTIVATION_EMAIL.getMessage()))
             return null
         }
     }
@@ -592,20 +670,24 @@ enum class UserDetailError(value:String): SmartEnum {
     RESULT_ERROR_CONNECTION_ERROR("RESULT_ERROR_CONNECTION_ERROR"),
     RESULT_ERROR_OBJECT_NOT_FOUND("RESULT_OBJECT_NOT_FOUND"),
     RESULT_ERROR_FIELD_ALREADY_EXISTS("RESULT_ERROR_FIELD_ALREADY_EXISTS"),
+    RESULT_ERROR_ACTIVATION_EMAIL("RESULT_ERROR_ACTIVATION_EMAIL"),
+    RESULT_OK_SEND_ACTIVATION_EMAIL("RESULT_OK_SEND_ACTIVATION_EMAIL"),
     RESULT_ERROR_UNKNOWN_ERROR("RESULT_ERROR_UNKNOWN_ERROR"),
     AUTHENTICATION_ERROR("AUTHENTICATION_ERROR"),
     INTERNAL_ERROR("INTERNAL_ERROR");
     override fun getMessage():String {
         return when (this) {
-            RESULT_OK -> ""
+            RESULT_OK -> "Operation completed successfully"
             RESULT_ERROR_FIELD_IS_EMPTY -> "This field is required"
             RESULT_ERROR_INCORRECT_FIELD_VALUE -> "Incorrect field value"
             RESULT_ERROR_INCORRECT_EMAIL -> "Incorrect email"
             RESULT_ERROR_PASSWORDS_SHOULD_MATCH -> "Passwords should match"
             RESULT_ERROR_CONNECTION_ERROR -> "Connection error"
             RESULT_ERROR_UNKNOWN_ERROR -> "Unknown error. Please, contact support"
-            RESULT_ERROR_OBJECT_NOT_FOUND -> "User with specified ID not found. Could not update"
+            RESULT_ERROR_OBJECT_NOT_FOUND -> "User with specified ID not found. Could not continue"
             RESULT_ERROR_FIELD_ALREADY_EXISTS -> "User with provided value already exists"
+            RESULT_ERROR_ACTIVATION_EMAIL -> "Could not send activation email to user. Please, contact support"
+            RESULT_OK_SEND_ACTIVATION_EMAIL -> "Activation email sent successfully"
             AUTHENTICATION_ERROR -> "Authentication error. Please, login again"
             INTERNAL_ERROR -> "System error. Please,contact support"
         }

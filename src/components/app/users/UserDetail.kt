@@ -144,13 +144,15 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
                         +" Active"
                     }
                 }
-                div(classes="col-md-9") {
-                    button(classes="btn btn-primary btn-xs") {
-                        attrs {
-                            onClickFunction = { sendActivationEmailBtnClick()}
+                if (props.user_id != null && !props.user_id!!.isEmpty()) {
+                    div(classes = "col-md-9") {
+                        button(classes = "btn btn-primary btn-xs") {
+                            attrs {
+                                onClickFunction = { sendActivationEmailBtnClick() }
+                            }
+                            span(classes = "glyphicon glyphicon-envelope") {}
+                            span { +" Send activation email" }
                         }
-                        span(classes="glyphicon glyphicon-envelope") {}
-                        span {+" Send activation email"}
                     }
                 }
             }
@@ -291,6 +293,7 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
         if (props.showProgressIndicator) {
             return
         }
+        UserDetailState.SendActivationEmail().exec()
     }
 
     /**
