@@ -95,36 +95,57 @@ fun guid():String {
  * @param obj: Object which need to convert
  * @return JSON as string
  */
-fun stringifyJSON(obj:HashMap<String,Any>):String {
+fun stringifyJSON(obj:Any):String {
     var result:Array<Pair<String,Any>>? = null
-    for ((index,value) in obj) {
-        if (jsTypeOf(value) != "object") {
-            if (result == null) {
-                result = Array(obj.count(),{index to value})
-            } else {
-                result.set(result.count(), index to value)
-            }
-        } else {
-            if (value is HashMap<*,*>) {
+    if (obj is HashMap<*,*>) {
+        val obj = obj as HashMap<String,Any>
+        for ((index, value) in obj) {
+            if (jsTypeOf(value) != "object") {
                 if (result == null) {
-                    result = Array(obj.count(), { index to stringifyJSON(value as HashMap<String, Any>) })
+                    result = Array(obj.count(), { index to value })
                 } else {
-                    result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
-                }
-            } else if (value is Array<*>) {
-                if (result == null) {
-                    result = Array(obj.count(),{index to JSON.stringify(value)})
-                } else {
-                    result.set(result.count(), index to JSON.stringify(value))
+                    result.set(result.count(), index to value)
                 }
             } else {
-                if (result == null) {
-                    result = Array(obj.count(),{index to "<object>"})
+                if (value is HashMap<*, *>) {
+                    if (result == null) {
+                        result = Array(obj.count(), { index to stringifyJSON(value as HashMap<String, Any>) })
+                    } else {
+                        result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
+                    }
+                } else if (value is Array<*>) {
+                    if (result == null) {
+                        result = Array(obj.count(), { index to JSON.stringify(value) })
+                    } else {
+                        result.set(result.count(), index to JSON.stringify(value))
+                    }
+                } else if (value is ArrayList<*>) {
+                    if (result == null) {
+                        result = Array(obj.count(), { index to stringifyJSON(value) })
+                    } else {
+                        result.set(result.count(), index to stringifyJSON(value))
+                    }
                 } else {
-                    result.set(result.count(), index to "<object>")
+                    if (result == null) {
+                        result = Array(obj.count(), { index to "<object>" })
+                    } else {
+                        result.set(result.count(), index to "<object>")
+                    }
                 }
             }
         }
+    }  else if (obj is ArrayList<*>) {
+        var result:Array<String>? = null
+        var counter = 0;
+        for (item in obj) {
+            if (result == null) {
+                result = Array(obj.count(),{ stringifyJSON(item!!)})
+                counter++
+            } else {
+                result.set(counter++, stringifyJSON(item!!))
+            }
+        }
+        return JSON.stringify(result)
     }
     if (result!=null) {
         return JSON.stringify(json(*result))
@@ -187,7 +208,6 @@ fun isValidEmail(email: String): Boolean {
         val reg = RegExp("^(([^<>()[\\]\\\\.,;:\\s@\\\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\\\"]+)*)|(\\\".+\\\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))\$")
         return reg.test(email.trim())
     } catch (e:Exception) {
-        console.log(e)
         result = false
     }
     return result

@@ -301,12 +301,9 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
      */
     fun changeTextField(event:Event,fieldName:String) {
         var value = ""
-        if (fieldName == "default_room" || fieldName == "role") {
-            val inputItem = event.target as HTMLSelectElement
-            value = inputItem.value.trim()
-        } else {
-            val inputItem = event.target as HTMLInputElement
-            value = inputItem.value.trim()
+        when (event.target) {
+            is HTMLSelectElement -> value = (event.target as HTMLSelectElement).value.toString()
+            is HTMLInputElement -> value = (event.target as HTMLInputElement).value.toString()
         }
         when(fieldName) {
             "login" -> appStore.dispatch(UserDetailState.Change_login_action(value))
@@ -321,6 +318,7 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
                 var value = moment(value).utc().unix()
                 setBirthDate(value)
             }
+            "gender" -> appStore.dispatch(UserDetailState.Change_gender_action(Gender.valueOf(value)))
         }
     }
 
@@ -341,7 +339,6 @@ class UserDetail : RComponent<UserDetailState, UserDetailState>() {
      * @param value: Timestamp in seconds
      */
     fun setBirthDate(timestamp:dynamic) {
-        console.log(timestamp.toString().toInt())
         appStore.dispatch(UserDetailState.Change_birthDate_action(timestamp.toString().toInt()))
         this.birthDatePicker.data("DateTimePicker").date(moment(timestamp*1000))
     }

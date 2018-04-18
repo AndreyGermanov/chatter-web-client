@@ -234,10 +234,17 @@ class UserDetailState: State {
             state = appStore.state as AppState
             var request = response["request"] as HashMap<String,Any>
             if (request["action"].toString()=="admin_add_user") {
+                val user = response["user"] as HashMap<String,Any>
+                val user_id = user["_id"].toString()
                 Logger.log(LogLevel.DEBUG, "New user added for request with id: $request_id. " +
                         "Redirecting to this user page: ${stringifyJSON(response)}",
                         "UserDetailState", "SaveItem.handleWebSocketResponse")
-                window.location.href = "#/user/${state.userDetail.user_id}"
+                window.location.assign("#/user/$user_id")
+                window.location.reload()
+            } else if (request["action"] == "admin_update_user") {
+                appStore.dispatch(UserDetailState.Change_successMessage_action("User data updated succesfully"))
+                Logger.log(LogLevel.DEBUG, "Item '${state.userDetail.login}' updated successfully",
+                        "UserDetailState","SaveItem.handleWebSocketResponse")
             }
             return null
         }
@@ -378,59 +385,61 @@ class UserDetailState: State {
         } else {
             request["action"] = "admin_add_user"
         }
-        var fields = HashMap<String,Any>()
+        val fields = ArrayList<HashMap<String,Any>>()
         if (user.login.trim().isEmpty()) {
             errors["login"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
         } else {
-            fields["login"] = user.login.trim()
+            fields.add(hashMapOf("login" to user.login.trim()))
         }
         if (user.email.trim().isEmpty()) {
             errors["email"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
         } else if (!isValidEmail(user.email.trim())) {
             errors["email"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
         } else {
-            fields["email"] = user.email.trim()
+            fields.add(hashMapOf("email" to user.email.trim()))
         }
-        if (user.role == 0) {
-            errors["role"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
-        } else if (UserRole.getValueByCode(user.role) == null) {
-            errors["role"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
-        } else {
-            fields["role"] = user.role
+        when {
+            user.role == 0 -> errors["role"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
+            UserRole.getValueByCode(user.role) == null -> {
+                errors["role"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
+            }
+            else -> fields.add(hashMapOf("role" to user.role))
         }
-        if (user.default_room.toString().isEmpty()) {
-            errors["default_room"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
-        } else if ((user.rooms.filterKeys { it == user.default_room }).count() == 0) {
-            errors["default_room"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
-        } else {
-            fields["default_room"] = user.default_room
+        when {
+            user.default_room.toString().isEmpty() -> {
+                errors["default_room"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
+            }
+            (user.rooms.filterKeys { it == user.default_room }).count() == 0 -> {
+                errors["default_room"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
+            }
+            else -> fields.add(hashMapOf("default_room" to user.default_room))
         }
         if (request["action"].toString() == "admin_add_user" && user.password.trim().isEmpty()) {
             errors["password"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
         } else if (user.password.trim() != user.confirm_password.trim()) {
             errors["password"] = UserDetailError.RESULT_ERROR_PASSWORDS_SHOULD_MATCH
         } else if (!user.password.trim().isEmpty()) {
-            fields["password"] = user.password.trim()
+            fields.add(hashMapOf("password" to user.password.trim()))
         }
         if (user.first_name.trim().isEmpty()) {
             errors["first_name"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
         } else {
-            fields["first_name"] = user.first_name.trim()
+            fields.add(hashMapOf("first_name" to user.first_name.trim()))
         }
         if (user.last_name.trim().isEmpty()) {
             errors["last_name"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
         } else {
-            fields["last_name"] = user.last_name.trim()
+            fields.add(hashMapOf("last_name" to user.last_name.trim()))
         }
-        fields["gender"] = user.gender.toString()
-        if (user.birthDate == 0) {
-            errors["birthDate"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
-        } else if (user.birthDate > (Date().getTime()/1000).toInt()) {
-            errors["birthDate"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
-        } else {
-            fields["birthDate"] = user.birthDate
+        fields.add(hashMapOf("gender" to user.gender.toString()))
+        when {
+            user.birthDate == 0 -> errors["birthDate"] = UserDetailError.RESULT_ERROR_FIELD_IS_EMPTY
+            user.birthDate > (Date().getTime()/1000).toInt() -> {
+                errors["birthDate"] = UserDetailError.RESULT_ERROR_INCORRECT_FIELD_VALUE
+            }
+            else -> fields.add(hashMapOf("birthDate" to user.birthDate))
         }
-        fields["active"] = user.active
+        fields.add(hashMapOf("active" to user.active))
         request["fields"] = fields
         if (errors.count()>0) {
             appStore.dispatch(UserDetailState.Change_errors_action(errors))
