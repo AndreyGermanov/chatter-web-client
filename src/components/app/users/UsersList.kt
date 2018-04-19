@@ -1,5 +1,6 @@
 package components.app.users
 
+import core.MessageCenter
 import kotlinx.html.InputType
 import kotlinx.html.id
 import kotlinx.html.js.onChangeFunction
@@ -12,6 +13,7 @@ import react.RComponent
 import react.dom.*
 import store.UsersListState
 import store.appStore
+import kotlin.browser.window
 import kotlin.math.ceil
 
 /**
@@ -167,11 +169,13 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
     fun RBuilder.renderTableRow(item:HashMap<String,String>) {
         tr {
             td {
-                input(type = InputType.checkBox) {
-                    attrs {
-                        checked = props.selectedItems.contains(item["_id"]!!.toString())
-                        onChangeFunction = {
-                            toggleItem(it, item["_id"].toString())
+                if (item["_id"] != MessageCenter.user_id) {
+                    input(type = InputType.checkBox) {
+                        attrs {
+                            checked = props.selectedItems.contains(item["_id"]!!.toString())
+                            onChangeFunction = {
+                                toggleItem(it, item["_id"].toString())
+                            }
                         }
                     }
                 }
@@ -210,6 +214,7 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
         }
         div(classes="pull-left") {
             button(classes="btn btn-danger btn-xs") {
+                attrs.onClickFunction = { deleteBtnClick() }
                 attrs["style"] = deleteButtondisplayStyle
                 span(classes="glyphicon glyphicon-remove"){}
                 +" "
@@ -440,6 +445,17 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
             return
         }
         UsersListState.LoadList().exec()
+    }
+
+    /**
+     * "Delete selected" button click handler
+     */
+    fun deleteBtnClick() {
+        if (props.selectedItems.count()>0 && window.confirm("Are you sure?")==true) {
+            UsersListState.DeleteItems().exec() {
+                UsersListState.LoadList().exec()
+            }
+        }
     }
 }
 

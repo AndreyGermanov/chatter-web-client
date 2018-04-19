@@ -176,6 +176,122 @@ class UsersListState: State {
             }
         }
     }
+
+    /**
+     * Action used to delete items from user list
+     */
+    class DeleteItems: MessageCenterResponseListener {
+
+        // Callback function, which should run after process this action (optional)
+        var callback: (()->Unit)? = null
+        /**
+         * Function used to start action. Prepares request, and sends it to MessageCenter
+         *
+         * @param callback Callback function, which should run after process this action (optional)
+         */
+        fun exec(callback:(()->Unit)?) {
+            val state = appStore.state as AppState
+            val list = state.usersList
+            this.callback = callback
+            Logger.log(LogLevel.DEBUG,"Starting DeleteItems action.",
+                    "UsersListState","DeleteItems.exec")
+            if (list.showProgressIndicator) {
+                Logger.log(LogLevel.WARNING,"Could not start request, because other request already going",
+                        "UsersListsState","DeleteItems.exec")
+                return
+            }
+            if (list.selectedItems.count() == 0) {
+                appStore.dispatch(UsersListState.Change_error_Action(
+                        UsersListError.RESULT_ERROR_FIELD_IS_EMPTY.getMessage()))
+                Logger.log(LogLevel.DEBUG,"No items selected to delete.",
+                        "UsersListState","DeleteItems.exec")
+                return
+            }
+            if (!MessageCenter.isConnected) {
+                appStore.dispatch(UserDetailState.Change_errors_action(
+                        hashMapOf("general" to UserDetailError.RESULT_ERROR_CONNECTION_ERROR)))
+                Logger.log(LogLevel.DEBUG,"Server connection error.",
+                        "UsersListState","DeleteItems.exec")
+                return
+            }
+            appStore.dispatch(UsersListState.Change_error_Action(UsersListError.RESULT_OK.getMessage()))
+            Logger.log(LogLevel.DEBUG,"Validating data and preparing request body.",
+                    "UsersListState","DeleteItems.exec")
+            val request = hashMapOf(
+                    "action" to "admin_remove_users",
+                    "sender" to this,
+                    "list" to list.selectedItems
+            )
+
+            appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(true))
+            Logger.log(LogLevel.DEBUG,"Prepared request for MessageCenter. Request body: " +
+                    "${stringifyJSON(request)}","UsersListState","DeleteItems.exec")
+            val result = MessageCenter.addToPendingRequests(request)
+            if (result != null) {
+                Logger.log(LogLevel.DEBUG, "Added request to MessageCenter pending requests queue. " +
+                        "Added request: ${stringifyJSON(result)}", "UsersListState","DeleteItem.exec")
+            } else {
+                Logger.log(LogLevel.WARNING, "Could not add request to MessageCenter pending requests queue. " +
+                        "Request: ${stringifyJSON(request)}","UsersListState","DeleteItem.exec")
+                appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(false))
+            }
+        }
+
+        /**
+         * Function receives response from MessageCenter, after it processes request placed to queue
+         *
+         * @param request_id: ID of processed request
+         * param response: Body of response from server
+         *
+         * @returns custom result or nothing, depending on sense of this request. In this case, it returns
+         * nothing
+         */
+        override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
+            appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(false))
+            var state = appStore.state as AppState
+            if (!state.usersList.processResponse(response)) {
+                return null
+            }
+            if (this.callback != null) {
+                this.callback!!()
+            }
+            return null
+        }
+    }
+
+    /**
+     * Function used to implement general process and check for responses, which came
+     * from WebSocket server. It checks general response format and response codes
+     *
+     * @param response: Response body
+     * returns True if general fields ok or false otherwise
+     */
+    fun processResponse(response:HashMap<String,Any>):Boolean {
+        if (response["status"] == null) {
+            Logger.log(LogLevel.WARNING, "Response does not contain 'status' field",
+                    "UsersListState", "processResponse")
+            return false
+        }
+        var response_code = UsersListError.RESULT_ERROR_UNKNOWN_ERROR
+        if (response["status"] == "error") {
+            var field = "general"
+            try {
+                response_code = UsersListError.valueOf(response["status_code"].toString())
+            } catch (e:Exception) {
+                Logger.log(LogLevel.WARNING, "Could not parse result code ${response["status_code"]}",
+                        "UsersListState","processResponse")
+            }
+            appStore.dispatch(UsersListState.Change_error_Action(response_code.getMessage()))
+            return false
+        }
+        if (response["status"] != "ok") {
+            Logger.log(LogLevel.WARNING, "Unknown status returned ${response["status"]}",
+                    "UsersListState","processResponse")
+            appStore.dispatch(UsersListState.Change_error_Action(UsersListError.INTERNAL_ERROR.getMessage()))
+            return false
+        }
+        return true
+    }
     /**
      * Function returns custom string representation of UsersListState object
      *
@@ -198,17 +314,18 @@ class UsersListState: State {
 enum class UsersListError(val value:String):SmartEnum {
     RESULT_OK("RESULT_OK"),
     RESULT_ERROR_CONNECTION_ERROR("RESULT_ERROR_CONNECTION_ERROR"),
-    RESULT_ERROR_UNKNOWN("RESULT_ERROR_UNKNOWN"),
+    RESULT_ERROR_UNKNOWN_ERROR("RESULT_ERROR_UNKNOWN_ERROR"),
+    RESULT_ERROR_FIELD_IS_EMPTY("RESULT_ERROR_LIST_IS_EMPTY"),
     INTERNAL_ERROR("INTERNAL_ERROR"),
     AUTHENTICATION_ERROR("AUTHENTICATION_ERROR");
     override fun getMessage(): String {
-        var result = ""
-        when (this) {
-            RESULT_ERROR_CONNECTION_ERROR -> result = "Server connection error."
-            RESULT_ERROR_UNKNOWN -> result = "Unknown error. Please contact support."
-            INTERNAL_ERROR -> result = "System error. Please contact support."
-            AUTHENTICATION_ERROR -> result = "Authentication error. Please contact support."
+        return when (this) {
+            RESULT_OK -> ""
+            RESULT_ERROR_CONNECTION_ERROR -> "Server connection error."
+            RESULT_ERROR_UNKNOWN_ERROR -> "Unknown error. Please contact support."
+            RESULT_ERROR_FIELD_IS_EMPTY -> "No users selected to delete"
+            INTERNAL_ERROR -> "System error. Please contact support."
+            AUTHENTICATION_ERROR -> "Authentication error. Please contact support."
         }
-        return result;
     }
 }

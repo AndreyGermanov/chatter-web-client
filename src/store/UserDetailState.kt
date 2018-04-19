@@ -374,7 +374,7 @@ class UserDetailState: State {
                     "UserDetailState","SendActivationEmail.exec")
             if (user.showProgressIndicator) {
                 Logger.log(LogLevel.WARNING,"Could not start request, because other request already going",
-                        "UserDetailState","GetRoomsList.exec")
+                        "UserDetailState","SendActivationEmail.exec")
                 return
             }
             if (user.user_id == null || user.user_id!!.isEmpty()) {
@@ -545,7 +545,7 @@ class UserDetailState: State {
     fun processResponse(response:HashMap<String,Any>):Boolean {
         if (response["status"] == null) {
             Logger.log(LogLevel.WARNING, "Response does not contain 'status' field",
-                    "UserDetailState", "processUserDetailResponse")
+                    "UserDetailState", "processResponse")
             return false
         }
         var response_code = UserDetailError.RESULT_ERROR_UNKNOWN_ERROR
@@ -555,7 +555,7 @@ class UserDetailState: State {
                 response_code = UserDetailError.valueOf(response["status_code"].toString())
             } catch (e:Exception) {
                 Logger.log(LogLevel.WARNING, "Could not parse result code ${response["status_code"]}",
-                        "UserDetailState","processUserDetailResponse")
+                        "UserDetailState","processResponse")
             }
             if (response["field"] != null) {
                 field = response["field"].toString()
@@ -565,7 +565,7 @@ class UserDetailState: State {
         }
         if (response["status"] != "ok") {
             Logger.log(LogLevel.WARNING, "Unknown status returned ${response["status"]}",
-                    "UserDetailState","processUserDetailResponse")
+                    "UserDetailState","processResponse")
             appStore.dispatch(UserDetailState.Change_errors_action(hashMapOf("general" to UserDetailError.INTERNAL_ERROR)))
             return false
         }
