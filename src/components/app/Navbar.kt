@@ -6,6 +6,9 @@ import react.RBuilder
 import react.RComponent
 import react.dom.*
 import store.*
+import utils.LogLevel
+import utils.Logger
+import kotlin.browser.window
 
 /**
  * Component used to draw top navigation bar
@@ -41,13 +44,28 @@ class NavBar : RComponent<NavbarState, NavbarState>() {
                     attrs["id"] = "bs-navbar-collapse-1"
                     ul(classes="nav navbar-nav") {
                         li(classes=(if (props.currentScreen == AppScreen.ROOMS_LIST) "active" else "")) {
-                            a(href="#/rooms") {+"Rooms"}
+                            a(href="#/rooms") {
+                                span(classes="glyphicon glyphicon-map-marker") {
+                                    + " "
+                                }
+                                +" Rooms"
+                            }
                         }
                         li(classes=(if (props.currentScreen == AppScreen.USERS_LIST) "active" else "")) {
-                            a(href="#/users") {+"Users"}
+                            a(href="#/users") {
+                                span(classes="fas fa-users") {
+                                    + " "
+                                }
+                                +" Users"
+                            }
                         }
                         li(classes=(if (props.currentScreen == AppScreen.SESSIONS_LIST) "active" else "")) {
-                            a(href="#/sessions") {+"Sessions"}
+                            a(href="#/sessions") {
+                                span(classes="fas fa-plug") {
+                                    + " "
+                                }
+                                +" Sessions"
+                            }
                         }
                     }
                     ul(classes="nav navbar-nav navbar-right") {
@@ -69,7 +87,10 @@ class NavBar : RComponent<NavbarState, NavbarState>() {
                                     }
 
                                 }
-                                +props.username
+                                span(classes="fas fa-user") {
+                                    + " "
+                                }
+                                +" ${props.username}"
                                 span(classes="caret") {}
                             }
                             ul(classes="dropdown-menu") {
@@ -83,6 +104,7 @@ class NavBar : RComponent<NavbarState, NavbarState>() {
                                 }
                                 li {
                                     a("#") {
+                                        attrs.onClickFunction = { logoutClick() }
                                         +"Logout"
                                     }
                                 }
@@ -93,10 +115,46 @@ class NavBar : RComponent<NavbarState, NavbarState>() {
             }
         }
     }
+
+    /**********************
+     * Life cycle methods *
+     *********************/
+
+    /**
+     * Function runs every time when component receives notification about changing application state from reducer
+     * or properties from uplevel object. Here component can control what to do right after UI updated
+     *
+     * @param prevProps: Previous property values, to compare current properties with
+     * @param prevState: Previous state, to compare with current state values
+     */
+    override fun componentDidUpdate(prevProps: NavbarState, prevState: NavbarState) {
+        Logger.log(LogLevel.DEBUG_REDUX, "Applying new state to LoginForm. State: $props",
+                "LoginForm", "newState")
+        if (props.errors["general"] != null) {
+            window.alert(props.errors["general"]!!.getMessage())
+            val errors = props.errors
+            errors.remove("general")
+            appStore.dispatch(LoginFormState.changeErrorsField(errors as HashMap<String,LoginFormError>))
+        }
+    }
+
+    /******************
+     * Event handlers *
+     *****************/
+
+    /**
+     * "Logout" menu item click handler
+     */
+    fun logoutClick() {
+        LoginFormState.doLogout().exec {
+            window.location.reload()
+        }
+    }
 }
 
-fun RBuilder.navbar(currentScreen:AppScreen,username:String,dropdownClass:String) = child(NavBar::class) {
+fun RBuilder.navbar(currentScreen:AppScreen,username:String,dropdownClass:String,errors:HashMap<String,SmartEnum>) = child(NavBar::class) {
     attrs.currentScreen = currentScreen
     attrs.username = username
     attrs.userMenuDropdownClass = dropdownClass
+    attrs.errors = errors
 }

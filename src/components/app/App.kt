@@ -43,7 +43,8 @@ class App : RComponent<RProps, AppState>(), StoreSubscriber {
             return
         }
         if (state.currentScreen != AppScreen.LOGIN_FORM) {
-            navbar(state.currentScreen!!,state.user.login,state.navbar.userMenuDropdownClass)
+            navbar(state.currentScreen!!,state.user.login,state.navbar.userMenuDropdownClass,
+                    state.loginForm.errors as HashMap<String,SmartEnum>)
         }
         div(classes="row") {
             attrs {

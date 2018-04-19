@@ -52,7 +52,7 @@ class LoginFormState : State {
          * and send request to MessageCenter WebSocket server
          */
         fun exec(user_id:String="",session_id:String="") {
-            Logger.log(LogLevel.DEBUG,"Begin login user action")
+            Logger.log(LogLevel.DEBUG,"Begin login user action","LoginFormState","doLogin.exec")
             if (!user_id.toString().isEmpty() && !session_id.toString().isEmpty()) {
                 Logger.log(LogLevel.DEBUG,"Begin login user action using user_id and session_id",
                         "LoginFormState.doLogin","exec")
@@ -104,21 +104,9 @@ class LoginFormState : State {
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>) {
             Logger.log(LogLevel.DEBUG,"Received response to request with id: $request_id. " +
                     "Response body: ${stringifyJSON(response)}","LoginFormState","handleWebSocketResponse")
-            var failed_response = false;
-            if (!response.containsKey("status")) {
-                Logger.log(LogLevel.WARNING,"Response for request_id=$request_id does not " +
-                        "contain 'status' field", "LoginFormState.doLogin","exec")
-                return
-            }
-            if (response["status"]!="ok" && response["status"] != "error") {
-                Logger.log(LogLevel.WARNING,"Response for request_id=$request_id contains incorrect " +
-                        " value of 'status' field. Response body: $response", "LoginFormState.doLogin","exec")
-                return
-            }
-
-            if (!response.containsKey("status_code")) {
-                Logger.log(LogLevel.WARNING,"Response for request_id=$request_id does not contain 'status_code'",
-                        "LoginFormState.doLogin","exec")
+            var failed_response = false
+            var state = appStore.state as AppState
+            if (!state.loginForm.processResponse(response)) {
                 return
             }
             appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(false))
@@ -192,6 +180,106 @@ class LoginFormState : State {
             appStore.dispatch(UserState.Change_role_Action(UserRole.ADMIN))
             appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.USERS_LIST))
         }
+    }
+
+    /**
+     * Action to implement "Logout" function
+     */
+    class doLogout(): MessageCenterResponseListener {
+
+        var callback: (()->Unit)? = null
+        /**
+         * Function used to run this action, do login and password validation
+         * and send request to MessageCenter WebSocket server
+         */
+        fun exec(callback:(()->Unit)?) {
+            Logger.log(LogLevel.DEBUG,"Begin logout user action","LoginFormState","doLogout.exec")
+            this.callback = callback
+            if (!MessageCenter.isConnected) {
+                Logger.log(LogLevel.DEBUG, "WebSocket server Connection error during login",
+                        "LoginFormState","doLogout.exec")
+                appStore.dispatch(
+                        LoginFormState.changeErrorsField(
+                                hashMapOf("general" to LoginFormError.RESULT_ERROR_CONNECTION_ERROR)
+                        )
+                )
+                return
+            }
+            val request = hashMapOf("action" to "logout_user", "sender" to this)
+            Logger.log(LogLevel.DEBUG,"Created logout request: ${stringifyJSON(request)}",
+                    "LoginFormState","doLogout.exec")
+            MessageCenter.addToPendingRequests(request)
+            appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(true))
+        }
+
+        /**
+         * Handles responses from MessageCenter WebSocket server, related to requests sent by
+         * this action
+         */
+        override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>) {
+            Logger.log(LogLevel.DEBUG,"Received response to request with id: $request_id. " +
+                    "Response body: ${stringifyJSON(response)}","LoginFormState","doLogout.handleWebSocketResponse")
+            var failed_response = false
+            appStore.dispatch(LoginFormState.changeShowProgressIndicatorField(false))
+            var state = appStore.state as AppState
+            if (!state.loginForm.processResponse(response)) {
+                return
+            }
+            MessageCenter.removeFromRequestsWaitingResponses(request_id)
+
+            localStorage.removeItem("user_id")
+            localStorage.removeItem("session_id")
+            appStore.dispatch(LoginFormState.changeErrorsField(HashMap()))
+            appStore.dispatch(UserState.Change_user_id_Action(""))
+            appStore.dispatch(UserState.Change_session_id_Action(""))
+            appStore.dispatch(UserState.Change_login_Action(""))
+            appStore.dispatch(UserState.Change_email_Action(""))
+            appStore.dispatch(UserState.Change_first_name_Action(""))
+            appStore.dispatch(UserState.Change_last_name_Action(""))
+            appStore.dispatch(UserState.Change_gender_Action(Gender.M))
+            appStore.dispatch(UserState.Change_birthDate_Action( 0))
+            appStore.dispatch(UserState.Change_default_room_Action(""))
+            appStore.dispatch(UserState.Change_isLogin_Action(false))
+            appStore.dispatch(UserState.Change_role_Action(UserRole.USER))
+            appStore.dispatch(AppState.changeCurrentScreenAction(AppScreen.LOGIN_FORM))
+            if (callback != null) {
+                callback!!()
+            }
+        }
+    }
+
+    /**
+     * Function used to implement general process and check for responses, which came
+     * from WebSocket server. It checks general response format and response codes
+     *
+     * @param response: Response body
+     * returns True if general fields ok or false otherwise
+     */
+    fun processResponse(response:HashMap<String,Any>):Boolean {
+        if (response["status"] == null) {
+            Logger.log(LogLevel.WARNING, "Response does not contain 'status' field",
+                    "LoginFormState", "processResponse")
+            return false
+        }
+        var response_code = LoginFormError.RESULT_ERROR_UNKNOWN
+        if (response["status"] == "error") {
+            var field = "general"
+            try {
+                response_code = LoginFormError.valueOf(response["status_code"].toString())
+            } catch (e:Exception) {
+                Logger.log(LogLevel.WARNING, "Could not parse result code ${response["status_code"]}",
+                        "LoginFormState","processResponse")
+            }
+            appStore.dispatch(LoginFormState.changeErrorsField(hashMapOf("general" to response_code)))
+            return false
+        }
+        if (response["status"] != "ok") {
+            Logger.log(LogLevel.WARNING, "Unknown status returned ${response["status"]}",
+                    "LoginFormState","processResponse")
+            appStore.dispatch(LoginFormState.changeErrorsField(hashMapOf("general" to LoginFormError.INTERNAL_ERROR)))
+            return false
+        }
+        return true
     }
 
     /**

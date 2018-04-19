@@ -13,6 +13,8 @@ class NavbarState: State {
     var currentScreen: AppScreen? = null
     // Holds name of logged user
     var  username:String = ""
+    // Errors
+    var errors = HashMap<String,SmartEnum>()
     /**
      * Function returns string representation of Application state
      */
@@ -24,6 +26,10 @@ class NavbarState: State {
      * Action used to change current screen of application
      */
     data class changeUserMenuDropdownClass(val dropdownClass:String): NavbarAction
+    /**
+     * Action used to change errors
+     */
+    data class changeErrorsAction(val errors:HashMap<String,SmartEnum>): NavbarAction
 }
 
 /**

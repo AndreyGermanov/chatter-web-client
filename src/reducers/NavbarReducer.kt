@@ -18,6 +18,7 @@ fun NavbarReducer(state: NavbarState, action: Action): NavbarState {
             "NavbarReducer","NavbarReducer")
     when(action) {
         is NavbarState.changeUserMenuDropdownClass -> newState.userMenuDropdownClass = action.dropdownClass
+        is NavbarState.changeErrorsAction -> newState.errors = action.errors
     }
     Logger.log(LogLevel.DEBUG_REDUX,"Returning new state after reducing. New state $newState",
             "NavbarReducer","NavbarReducer")

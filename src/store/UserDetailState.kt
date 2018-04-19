@@ -227,6 +227,7 @@ class UserDetailState: State {
          */
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
             appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
+            MessageCenter.removeFromRequestsWaitingResponses(request_id)
             var state = appStore.state as AppState
             if (!state.userDetail.processUserDetailResponse(response)) {
                 return null
@@ -314,6 +315,7 @@ class UserDetailState: State {
          */
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
             appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
+            MessageCenter.removeFromRequestsWaitingResponses(request_id)
             var state = appStore.state as AppState
             if (!state.userDetail.processResponse(response)) {
                 return null
@@ -426,6 +428,7 @@ class UserDetailState: State {
          */
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
             appStore.dispatch(UserDetailState.Change_showProgressIndicator_action(false))
+            MessageCenter.removeFromRequestsWaitingResponses(request_id)
             var state = appStore.state as AppState
             if (!state.userDetail.processResponse(response)) {
                 return null

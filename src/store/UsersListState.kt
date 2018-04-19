@@ -248,6 +248,7 @@ class UsersListState: State {
          */
         override fun handleWebSocketResponse(request_id: String, response: HashMap<String, Any>): Any? {
             appStore.dispatch(UsersListState.Change_showProgressIndicator_Action(false))
+            MessageCenter.removeFromRequestsWaitingResponses(request_id)
             var state = appStore.state as AppState
             if (!state.usersList.processResponse(response)) {
                 return null

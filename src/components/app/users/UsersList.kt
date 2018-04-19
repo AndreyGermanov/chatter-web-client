@@ -428,7 +428,8 @@ class UsersList : RComponent<UsersListState, UsersListState>() {
             selectedItems.clear()
         } else {
             for (item in props.items) {
-                if (item["_id"]!=null && !selectedItems.contains(item["_id"].toString())) {
+                if (item["_id"]!=null && !selectedItems.contains(item["_id"].toString())
+                        && item["_id"] != MessageCenter.user_id) {
                     selectedItems.add(item["_id"].toString())
                 }
             }
