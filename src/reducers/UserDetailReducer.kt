@@ -27,10 +27,7 @@ fun UserDetailReducer(state: UserDetailState, action: Action): UserDetailState {
         is UserDetailState.Change_first_name_action -> newState.first_name = action.first_name
         is UserDetailState.Change_last_name_action -> newState.last_name = action.last_name
         is UserDetailState.Change_gender_action -> newState.gender = action.gender
-        is UserDetailState.Change_birthDate_action -> {
-            console.log("REDUCE BIRTHDATE ${action.birthDate}")
-            newState.birthDate = action.birthDate
-        }
+        is UserDetailState.Change_birthDate_action -> newState.birthDate = action.birthDate
         is UserDetailState.Change_login_action -> newState.login = action.login
         is UserDetailState.Change_password_action -> newState.password = action.password
         is UserDetailState.Change_role_action -> newState.role = action.role

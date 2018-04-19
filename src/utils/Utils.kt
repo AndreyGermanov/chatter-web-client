@@ -5,7 +5,6 @@ import org.khronos.webgl.Uint32Array
 import kotlin.js.Json
 import kotlin.js.Math.random
 import kotlin.js.RegExp
-import kotlin.js.json
 import kotlin.math.floor
 
 fun crc32FromArrayBuffer(ab: ArrayBuffer):Double{
@@ -90,68 +89,74 @@ fun guid():String {
 }
 
 /**
- * Function produces JSON string from HashMap<String,Any>
+ * Utility function, used to parse single node of Kotlin collection to JavaScript plain object
+ *
+ * @param item: Object, which need to parse
+ * @returns Javascript plain object
+ */
+fun parseJsNode(item:Any):dynamic {
+    return when (item) {
+        is Array<*> -> jsObject(item)
+        is ArrayList<*> -> jsObject(item)
+        is HashMap<*,*> -> jsObject(item)
+        else -> {
+            if (jsTypeOf(item) == "object") {
+                "<object>"
+            } else {
+                item
+            }
+        }
+    }
+}
+
+/**
+ * Function produces plain JavaScript object from Kotlin collection as HashMap,Array or ArrayList
+ * with unlimited number of nested objects
+ *
+ * @param obj: Object which need to convert
+ * @return Javascript plain object
+ */
+fun jsObject(obj:Any):dynamic {
+    var result:dynamic = js("{}")
+    when (obj) {
+        is Array<*> -> {
+            result = js("[]")
+            for (item in obj) {
+                if (item == null) {
+                    continue
+                }
+                result.push(parseJsNode(item))
+            }
+        }
+        is ArrayList<*> -> {
+            result = js("[]")
+            for (item in obj) {
+                if (item == null) {
+                    continue
+                }
+                result.push(parseJsNode(item))
+            }
+        }
+        is HashMap<*,*> -> {
+            for ((index,item) in obj) {
+                if (item == null) {
+                    continue
+                }
+                result[index] = parseJsNode(item)
+            }
+        }
+    }
+    return result
+}
+
+/**
+ * Function produces JSON string from Kotlin object
  *
  * @param obj: Object which need to convert
  * @return JSON as string
  */
 fun stringifyJSON(obj:Any):String {
-    var result:Array<Pair<String,Any>>? = null
-    if (obj is HashMap<*,*>) {
-        val obj = obj as HashMap<String,Any>
-        for ((index, value) in obj) {
-            if (jsTypeOf(value) != "object") {
-                if (result == null) {
-                    result = Array(obj.count(), { index to value })
-                } else {
-                    result.set(result.count(), index to value)
-                }
-            } else {
-                if (value is HashMap<*, *>) {
-                    if (result == null) {
-                        result = Array(obj.count(), { index to stringifyJSON(value as HashMap<String, Any>) })
-                    } else {
-                        result.set(result.count(), index to stringifyJSON(value as HashMap<String, Any>))
-                    }
-                } else if (value is Array<*>) {
-                    if (result == null) {
-                        result = Array(obj.count(), { index to JSON.stringify(value) })
-                    } else {
-                        result.set(result.count(), index to JSON.stringify(value))
-                    }
-                } else if (value is ArrayList<*>) {
-                    if (result == null) {
-                        result = Array(obj.count(), { index to stringifyJSON(value) })
-                    } else {
-                        result.set(result.count(), index to stringifyJSON(value))
-                    }
-                } else {
-                    if (result == null) {
-                        result = Array(obj.count(), { index to "<object>" })
-                    } else {
-                        result.set(result.count(), index to "<object>")
-                    }
-                }
-            }
-        }
-    }  else if (obj is ArrayList<*>) {
-        var result:Array<String>? = null
-        var counter = 0;
-        for (item in obj) {
-            if (result == null) {
-                result = Array(obj.count(),{ stringifyJSON(item!!)})
-                counter++
-            } else {
-                result.set(counter++, stringifyJSON(item!!))
-            }
-        }
-        return JSON.stringify(result)
-    }
-    if (result!=null) {
-        return JSON.stringify(json(*result))
-    } else {
-        return ""
-    }
+    return JSON.stringify(jsObject(obj))
 }
 
 /**
