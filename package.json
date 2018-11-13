@@ -8,10 +8,12 @@
     "ajv": "^6.4.0",
     "core-js": "^2.5.4",
     "kotlin-test": "^1.2.31",
+    "macaddress": "^0.2.9",
     "randomatic": "^3.1.1",
     "react": "^16.3.0",
     "react-dom": "^16.3.0",
-    "react-router-dom": "^4.2.2"
+    "react-router-dom": "^4.2.2",
+    "url-parse": "^1.4.4"
   },
   "devDependencies": {
     "@jetbrains/gen-idea-libs": "^1.0.9",
