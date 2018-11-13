@@ -11,7 +11,7 @@ import kotlin.browser.window
 import kotlin.js.Date
 
 /**
- * Wrapper for WebSocket server with queue support. Client puts request to send message to queue. Each message
+ * Wrapper for WebSocket client with queue support. Client puts request to send message to queue. Each message
  * must have unique request_id field and "sender" field with link to object, which should receive response to
  * this request. After receiving request, object sends it to server and moves it to other queue -
  * requestsWaitingResponses and wait until server responds. When receive response, which has request_id,
